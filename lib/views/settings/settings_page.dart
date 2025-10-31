@@ -104,7 +104,16 @@ class _SettingsPageState extends State<SettingsPage> {
         String errorMessage = 'Sign in failed: $e';
 
         // Provide helpful error messages
-        if (e.toString().contains('sign_in_failed') ||
+        if (e.toString().contains('People API') ||
+            e.toString().contains('people.googleapis.com')) {
+          errorMessage = 'People API not enabled!\n\n'
+              'For web sign-in, enable People API:\n'
+              '1. Visit: https://console.developers.google.com/apis/api/people.googleapis.com/overview?project=321117363173\n'
+              '2. Click "ENABLE"\n'
+              '3. Wait a few minutes\n'
+              '4. Try sign-in again\n\n'
+              'Android works, web needs this API.';
+        } else if (e.toString().contains('sign_in_failed') ||
             e.toString().contains('SIGN_IN_FAILED')) {
           errorMessage = 'Sign in failed!\n\n'
               'Please configure OAuth client in Google Cloud Console.\n\n'

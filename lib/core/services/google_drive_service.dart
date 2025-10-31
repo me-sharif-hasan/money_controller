@@ -32,6 +32,7 @@ class GoogleDriveService {
 
   late final GoogleSignIn _googleSignIn;
   GoogleSignInAccount? _currentUser;
+  bool _isInitialized = false;
 
   GoogleDriveService() {
     _googleSignIn = GoogleSignIn(
@@ -44,40 +45,103 @@ class GoogleDriveService {
 
   // Initialize and check if user is already signed in
   Future<void> init() async {
+    if (_isInitialized) return;
+
+    // Listen to sign-in state changes
     _googleSignIn.onCurrentUserChanged.listen((account) {
       _currentUser = account;
+      print('GoogleSignIn: User changed to ${account?.email ?? "null"}');
     });
 
-    // Try to sign in silently
+    // Try to sign in silently (restore previous session)
     try {
-      _currentUser = await _googleSignIn.signInSilently();
+      final account = await _googleSignIn.signInSilently();
+      if (account != null) {
+        _currentUser = account;
+        print('GoogleSignIn: Silent sign-in successful for ${account.email}');
+      } else {
+        print('GoogleSignIn: No previous session found');
+      }
     } catch (e) {
-      print('Silent sign-in failed: $e');
+      print('GoogleSignIn: Silent sign-in failed - $e');
     }
+
+    _isInitialized = true;
   }
 
   // Sign in with Google
   Future<GoogleSignInAccount?> signIn() async {
     try {
+      // Check if already signed in
+      if (_currentUser != null) {
+        print('GoogleSignIn: Already signed in as ${_currentUser!.email}');
+        return _currentUser;
+      }
+
+      print('GoogleSignIn: Starting interactive sign-in...');
       final account = await _googleSignIn.signIn();
-      _currentUser = account;
+
+      if (account != null) {
+        // Don't manually set _currentUser, let the listener handle it
+        print('GoogleSignIn: Sign-in successful for ${account.email}');
+      } else {
+        print('GoogleSignIn: Sign-in cancelled by user');
+      }
+
       return account;
     } catch (e) {
-      print('Sign in error: $e');
+      print('GoogleSignIn: Sign-in error - $e');
       rethrow;
     }
   }
 
   // Sign out
   Future<void> signOut() async {
-    await _googleSignIn.signOut();
-    _currentUser = null;
+    try {
+      await _googleSignIn.signOut();
+      // Don't manually set _currentUser, let the listener handle it
+      print('GoogleSignIn: Signed out successfully');
+    } catch (e) {
+      print('GoogleSignIn: Sign-out error - $e');
+      rethrow;
+    }
   }
 
   // Switch account
   Future<GoogleSignInAccount?> switchAccount() async {
-    await _googleSignIn.disconnect();
-    return await signIn();
+    try {
+      print('GoogleSignIn: Disconnecting current account...');
+      await _googleSignIn.disconnect();
+      print('GoogleSignIn: Starting new sign-in...');
+      return await signIn();
+    } catch (e) {
+      print('GoogleSignIn: Switch account error - $e');
+      rethrow;
+    }
+  }
+
+  // Ensure user is authenticated and token is valid
+  Future<void> _ensureAuthenticated() async {
+    if (_currentUser == null) {
+      throw Exception('User not signed in. Please sign in first.');
+    }
+
+    // Try to get authenticated client to verify token is still valid
+    try {
+      final authClient = await _googleSignIn.authenticatedClient();
+      if (authClient == null) {
+        // Token might be expired, try silent sign-in to refresh
+        print('GoogleSignIn: Token expired, refreshing...');
+        final account = await _googleSignIn.signInSilently();
+        if (account == null) {
+          throw Exception('Session expired. Please sign in again.');
+        }
+        _currentUser = account;
+      }
+    } catch (e) {
+      print('GoogleSignIn: Authentication check failed - $e');
+      throw Exception('Authentication failed. Please sign in again.');
+    }
   }
 
   // Get all app data to backup
@@ -150,11 +214,11 @@ class GoogleDriveService {
 
   // Upload backup to Google Drive
   Future<String> uploadBackup() async {
-    if (_currentUser == null) {
-      throw Exception('User not signed in');
-    }
+    // Ensure user is authenticated
+    await _ensureAuthenticated();
 
     try {
+      print('GoogleSignIn: Getting authenticated client for upload...');
       // Get authenticated client
       final authClient = await _googleSignIn.authenticatedClient();
       if (authClient == null) {
@@ -220,11 +284,11 @@ class GoogleDriveService {
 
   // Download backup from Google Drive
   Future<String> downloadBackup() async {
-    if (_currentUser == null) {
-      throw Exception('User not signed in');
-    }
+    // Ensure user is authenticated
+    await _ensureAuthenticated();
 
     try {
+      print('GoogleSignIn: Getting authenticated client for download...');
       // Get authenticated client
       final authClient = await _googleSignIn.authenticatedClient();
       if (authClient == null) {
@@ -300,9 +364,8 @@ class GoogleDriveService {
 
   // Delete backup from Google Drive
   Future<void> deleteBackup() async {
-    if (_currentUser == null) {
-      throw Exception('User not signed in');
-    }
+    // Ensure user is authenticated
+    await _ensureAuthenticated();
 
     try {
       final authClient = await _googleSignIn.authenticatedClient();
