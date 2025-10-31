@@ -55,7 +55,19 @@ class GoogleDriveService {
 
     // Try to sign in silently (restore previous session)
     try {
-      final account = await _googleSignIn.signInSilently();
+      print('GoogleSignIn: Attempting silent sign-in...');
+
+      // First, check if there's a current user without making a call
+      final currentUser = _googleSignIn.currentUser;
+      if (currentUser != null) {
+        _currentUser = currentUser;
+        print('GoogleSignIn: Found existing session for ${currentUser.email}');
+        _isInitialized = true;
+        return;
+      }
+
+      // Try silent sign-in with suppressErrors to avoid FedCM issues
+      final account = await _googleSignIn.signInSilently(suppressErrors: true);
       if (account != null) {
         _currentUser = account;
         print('GoogleSignIn: Silent sign-in successful for ${account.email}');
@@ -63,7 +75,9 @@ class GoogleDriveService {
         print('GoogleSignIn: No previous session found');
       }
     } catch (e) {
+      // Catch FedCM and other errors gracefully
       print('GoogleSignIn: Silent sign-in failed - $e');
+      print('GoogleSignIn: This is normal on first use or if session expired');
     }
 
     _isInitialized = true;
@@ -122,8 +136,15 @@ class GoogleDriveService {
 
   // Ensure user is authenticated and token is valid
   Future<void> _ensureAuthenticated() async {
+    // First check if we have a current user
     if (_currentUser == null) {
-      throw Exception('User not signed in. Please sign in first.');
+      // Try to get current user without making a network call
+      _currentUser = _googleSignIn.currentUser;
+      if (_currentUser != null) {
+        print('GoogleSignIn: Restored current user ${_currentUser!.email}');
+      } else {
+        throw Exception('User not signed in. Please sign in first.');
+      }
     }
 
     // Try to get authenticated client to verify token is still valid
@@ -131,16 +152,34 @@ class GoogleDriveService {
       final authClient = await _googleSignIn.authenticatedClient();
       if (authClient == null) {
         // Token might be expired, try silent sign-in to refresh
-        print('GoogleSignIn: Token expired, refreshing...');
-        final account = await _googleSignIn.signInSilently();
+        print('GoogleSignIn: Token expired or invalid, attempting refresh...');
+
+        // Try silent sign-in with suppressErrors
+        final account = await _googleSignIn.signInSilently(suppressErrors: true);
         if (account == null) {
+          // Silent sign-in failed, user needs to sign in again
           throw Exception('Session expired. Please sign in again.');
         }
         _currentUser = account;
+        print('GoogleSignIn: Token refreshed successfully');
+      } else {
+        print('GoogleSignIn: Authentication verified');
       }
     } catch (e) {
       print('GoogleSignIn: Authentication check failed - $e');
-      throw Exception('Authentication failed. Please sign in again.');
+
+      // If it's a specific auth error, provide helpful message
+      if (e.toString().contains('Session expired')) {
+        rethrow;
+      }
+
+      // For other errors, try one more time with currentUser
+      if (_googleSignIn.currentUser != null) {
+        _currentUser = _googleSignIn.currentUser;
+        print('GoogleSignIn: Using current user as fallback');
+      } else {
+        throw Exception('Authentication failed. Please sign in again.');
+      }
     }
   }
 
