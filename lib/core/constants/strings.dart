@@ -38,4 +38,17 @@ const String EDIT_TRANSACTION = 'Edit Transaction';
 const String UPDATE = 'Update';
 const String COMPLETED = 'Completed';
 const String OVERDUE = 'Overdue';
+const String BACKUP_RESTORE = 'Backup & Restore';
+const String GOOGLE_DRIVE_BACKUP = 'Google Drive Backup';
+const String SIGN_IN_WITH_GOOGLE = 'Sign in with Google';
+const String SIGN_OUT = 'Sign Out';
+const String SWITCH_ACCOUNT = 'Switch Account';
+const String UPLOAD_BACKUP = 'Upload Backup';
+const String DOWNLOAD_BACKUP = 'Download Backup';
+const String LAST_BACKUP = 'Last Backup';
+const String NO_BACKUP_FOUND = 'No backup found';
+const String SIGNED_IN_AS = 'Signed in as';
+const String NOT_SIGNED_IN = 'Not signed in';
+const String BACKUP_WARNING = 'Warning: Downloading backup will replace all current data';
+const String CONTINUE = 'Continue';
 

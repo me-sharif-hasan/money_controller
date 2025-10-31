@@ -39,6 +39,12 @@ dependencies:
   fl_chart: ^0.69.2
   intl: ^0.19.0
   flutter_launcher_icons: ^0.14.4
+  googleapis: ^15.0.0
+  googleapis_auth: ^2.0.0
+  google_sign_in: ^6.2.1
+  path_provider: ^2.1.4
+  http: ^1.2.2
+  extension_google_sign_in_as_googleapis_auth: ^2.0.13
 
 dev_dependencies:
   flutter_test:
