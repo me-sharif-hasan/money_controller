@@ -26,7 +26,7 @@ class SettingProvider with ChangeNotifier {
   }
 
   Future<void> _loadSettings() async {
-    final data = await PrefsHelper.getData(PREF_SETTINGS);
+    final data = await PrefsHelper.getData(prefSettings);
     if (data != null) {
       _hardSavingMode = data['hardSavingMode'] as bool? ?? false;
       _currencySymbol = data['currencySymbol'] as String? ?? '৳';
@@ -60,7 +60,7 @@ class SettingProvider with ChangeNotifier {
 
 
   Future<void> _saveSettings() async {
-    await PrefsHelper.saveData(PREF_SETTINGS, {
+    await PrefsHelper.saveData(prefSettings, {
       'hardSavingMode': _hardSavingMode,
       'currencySymbol': _currencySymbol,
       'monthEndDay': _monthEndDay,

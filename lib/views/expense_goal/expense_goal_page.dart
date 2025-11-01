@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/expense_goal_provider.dart';
 import '../../providers/setting_provider.dart';
-import '../../widgets/app_button.dart';
 import '../../widgets/app_input_field.dart';
 import '../../core/constants/colors.dart';
 import '../../core/constants/strings.dart';
@@ -37,26 +36,26 @@ class _ExpenseGoalPageState extends State<ExpenseGoalPage> {
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setState) => AlertDialog(
-          title: const Text(ADD_EXPENSE_GOAL),
+          title: const Text(addExpenseGoal),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 AppInputField(
-                  label: GOAL_TITLE,
+                  label: goalTitle,
                   controller: _titleController,
                   prefixIcon: Icons.title,
                 ),
                 const SizedBox(height: 16),
                 AppInputField(
-                  label: TARGET_AMOUNT,
+                  label: targetAmount,
                   controller: _amountController,
                   keyboardType: TextInputType.number,
                   prefixIcon: Icons.money,
                 ),
                 const SizedBox(height: 16),
                 ListTile(
-                  title: const Text(TARGET_DATE),
+                  title: const Text(targetDate),
                   subtitle: Text(
                     _selectedDate != null
                         ? DateFormat('MMM dd, yyyy').format(_selectedDate!)
@@ -83,7 +82,7 @@ class _ExpenseGoalPageState extends State<ExpenseGoalPage> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text(CANCEL),
+              child: const Text(cancel),
             ),
             ElevatedButton(
               onPressed: () async {
@@ -100,10 +99,11 @@ class _ExpenseGoalPageState extends State<ExpenseGoalPage> {
                   );
 
                   await context.read<ExpenseGoalProvider>().addGoal(goal);
+                  if(!context.mounted) return;
                   Navigator.pop(context);
                 }
               },
-              child: const Text(ADD),
+              child: const Text(add),
             ),
           ],
         ),
@@ -120,26 +120,26 @@ class _ExpenseGoalPageState extends State<ExpenseGoalPage> {
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setState) => AlertDialog(
-          title: const Text(EDIT_EXPENSE_GOAL),
+          title: const Text(editExpenseGoal),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 AppInputField(
-                  label: GOAL_TITLE,
+                  label: goalTitle,
                   controller: _titleController,
                   prefixIcon: Icons.title,
                 ),
                 const SizedBox(height: 16),
                 AppInputField(
-                  label: TARGET_AMOUNT,
+                  label: targetAmount,
                   controller: _amountController,
                   keyboardType: TextInputType.number,
                   prefixIcon: Icons.money,
                 ),
                 const SizedBox(height: 16),
                 ListTile(
-                  title: const Text(TARGET_DATE),
+                  title: const Text(targetDate),
                   subtitle: Text(
                     _selectedDate != null
                         ? DateFormat('MMM dd, yyyy').format(_selectedDate!)
@@ -166,7 +166,7 @@ class _ExpenseGoalPageState extends State<ExpenseGoalPage> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text(CANCEL),
+              child: const Text(cancel),
             ),
             ElevatedButton(
               onPressed: () async {
@@ -181,10 +181,11 @@ class _ExpenseGoalPageState extends State<ExpenseGoalPage> {
                   );
 
                   await context.read<ExpenseGoalProvider>().updateGoal(updatedGoal);
+                  if(!context.mounted) return;
                   Navigator.pop(context);
                 }
               },
-              child: const Text(UPDATE),
+              child: const Text(update),
             ),
           ],
         ),
@@ -196,20 +197,21 @@ class _ExpenseGoalPageState extends State<ExpenseGoalPage> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text(DELETE),
+        title: const Text(delete),
         content: const Text('Are you sure you want to delete this goal?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text(CANCEL),
+            child: const Text(cancel),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: dangerColor),
             onPressed: () async {
               await context.read<ExpenseGoalProvider>().deleteGoal(goalId);
+              if(!context.mounted) return;
               Navigator.pop(context);
             },
-            child: const Text(DELETE),
+            child: const Text(delete),
           ),
         ],
       ),
@@ -277,7 +279,7 @@ class _ExpenseGoalPageState extends State<ExpenseGoalPage> {
                         children: [
                           Icon(Icons.edit, size: 20),
                           SizedBox(width: 8),
-                          Text(EDIT),
+                          Text(edit),
                         ],
                       ),
                     ),
@@ -287,7 +289,7 @@ class _ExpenseGoalPageState extends State<ExpenseGoalPage> {
                         children: [
                           Icon(Icons.delete, size: 20, color: dangerColor),
                           SizedBox(width: 8),
-                          Text(DELETE),
+                          Text(delete),
                         ],
                       ),
                     ),
@@ -318,14 +320,14 @@ class _ExpenseGoalPageState extends State<ExpenseGoalPage> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
-                    color: statusColor.withOpacity(0.1),
+                    color: statusColor.withAlpha((0.1*255).round()),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
                     isCompleted
-                        ? COMPLETED
+                        ? completed
                         : isOverdue
-                            ? OVERDUE
+                            ? overdue
                             : '$daysUntil days',
                     style: TextStyle(
                       color: statusColor,
@@ -340,9 +342,9 @@ class _ExpenseGoalPageState extends State<ExpenseGoalPage> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: statusColor.withOpacity(0.05),
+                  color: statusColor.withAlpha((0.05*255).round()),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: statusColor.withOpacity(0.2)),
+                  border: Border.all(color: statusColor.withAlpha((0.2*255).round())),
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -351,7 +353,7 @@ class _ExpenseGoalPageState extends State<ExpenseGoalPage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          DAILY_REQUIREMENT,
+                          dailyRequirement,
                           style: Theme.of(context).textTheme.bodySmall?.copyWith(
                                 color: Colors.grey,
                               ),
@@ -388,7 +390,7 @@ class _ExpenseGoalPageState extends State<ExpenseGoalPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text(EXPENSE_GOALS),
+        title: const Text(expenseGoals),
       ),
       body: goalProvider.isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -397,7 +399,7 @@ class _ExpenseGoalPageState extends State<ExpenseGoalPage> {
                 if (goalProvider.activeGoals.isNotEmpty)
                   Container(
                     padding: const EdgeInsets.all(16),
-                    color: primaryColor.withOpacity(0.1),
+                    color: primaryColor.withAlpha((0.1*255).round()),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [

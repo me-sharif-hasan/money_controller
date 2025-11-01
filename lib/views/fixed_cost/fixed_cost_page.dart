@@ -56,16 +56,16 @@ class _FixedCostPageState extends State<FixedCostPage> {
               ),
               const SizedBox(height: 16),
               AppInputField(
-                label: AMOUNT,
+                label: amount,
                 controller: _amountController,
                 keyboardType: TextInputType.number,
                 prefixIcon: Icons.money,
               ),
               const SizedBox(height: 16),
               DropdownButtonFormField<String>(
-                value: _selectedCategory,
+                initialValue: _selectedCategory,
                 decoration: const InputDecoration(
-                  labelText: CATEGORY,
+                  labelText: category,
                   prefixIcon: Icon(Icons.category),
                 ),
                 items: _categories.map((category) {
@@ -86,7 +86,7 @@ class _FixedCostPageState extends State<FixedCostPage> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text(CANCEL),
+            child: const Text(cancel),
           ),
           ElevatedButton(
             onPressed: () {
@@ -104,7 +104,7 @@ class _FixedCostPageState extends State<FixedCostPage> {
                 Navigator.pop(context);
               }
             },
-            child: const Text(ADD),
+            child: const Text(add),
           ),
         ],
       ),
@@ -131,16 +131,16 @@ class _FixedCostPageState extends State<FixedCostPage> {
               ),
               const SizedBox(height: 16),
               AppInputField(
-                label: AMOUNT,
+                label: amount,
                 controller: _amountController,
                 keyboardType: TextInputType.number,
                 prefixIcon: Icons.money,
               ),
               const SizedBox(height: 16),
               DropdownButtonFormField<String>(
-                value: _selectedCategory,
+                initialValue: _selectedCategory,
                 decoration: const InputDecoration(
-                  labelText: CATEGORY,
+                  labelText: category,
                   prefixIcon: Icon(Icons.category),
                 ),
                 items: _categories.map((category) {
@@ -161,7 +161,7 @@ class _FixedCostPageState extends State<FixedCostPage> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text(CANCEL),
+            child: const Text(cancel),
           ),
           ElevatedButton(
             onPressed: () {
@@ -177,7 +177,7 @@ class _FixedCostPageState extends State<FixedCostPage> {
                 Navigator.pop(context);
               }
             },
-            child: const Text(SAVE),
+            child: const Text(save),
           ),
         ],
       ),
@@ -191,13 +191,13 @@ class _FixedCostPageState extends State<FixedCostPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text(FIXED_COSTS),
+        title: const Text(fixedCosts),
       ),
       body: Column(
         children: [
           Container(
             padding: const EdgeInsets.all(16),
-            color: primaryColor.withOpacity(0.1),
+            color: primaryColor.withAlpha((0.1*255).round()),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -217,7 +217,7 @@ class _FixedCostPageState extends State<FixedCostPage> {
           ),
           Expanded(
             child: budgetProvider.fixedCosts.isEmpty
-                ? const Center(child: Text(NO_DATA))
+                ? const Center(child: Text(noData))
                 : ListView.builder(
                     padding: const EdgeInsets.all(16),
                     itemCount: budgetProvider.fixedCosts.length,
@@ -226,7 +226,7 @@ class _FixedCostPageState extends State<FixedCostPage> {
                       return Card(
                         child: ListTile(
                           leading: CircleAvatar(
-                            backgroundColor: primaryColor.withOpacity(0.1),
+                            backgroundColor: primaryColor.withAlpha((0.1*255).round()),
                             child: const Icon(Icons.receipt_long, color: primaryColor),
                           ),
                           title: Text(cost.name),
@@ -249,7 +249,7 @@ class _FixedCostPageState extends State<FixedCostPage> {
                                       children: [
                                         Icon(Icons.edit),
                                         SizedBox(width: 8),
-                                        Text(EDIT),
+                                        Text(edit),
                                       ],
                                     ),
                                   ),
@@ -259,7 +259,7 @@ class _FixedCostPageState extends State<FixedCostPage> {
                                       children: [
                                         Icon(Icons.delete, color: dangerColor),
                                         SizedBox(width: 8),
-                                        Text(DELETE, style: TextStyle(color: dangerColor)),
+                                        Text(delete, style: TextStyle(color: dangerColor)),
                                       ],
                                     ),
                                   ),

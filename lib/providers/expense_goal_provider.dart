@@ -34,13 +34,13 @@ class ExpenseGoalProvider with ChangeNotifier {
   }
 
   Future<void> _loadGoals() async {
-    final list = await PrefsHelper.getList(PREF_EXPENSE_GOALS);
+    final list = await PrefsHelper.getList(prefExpenseGoals);
     _goals = list.map((map) => ExpenseGoalModel.fromMap(map)).toList();
   }
 
   Future<void> _saveGoals() async {
     final list = _goals.map((goal) => goal.toMap()).toList();
-    await PrefsHelper.saveList(PREF_EXPENSE_GOALS, list);
+    await PrefsHelper.saveList(prefExpenseGoals, list);
   }
 
   Future<void> addGoal(ExpenseGoalModel goal) async {

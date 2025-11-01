@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/setting_provider.dart';
@@ -48,7 +50,7 @@ class _SettingsPageState extends State<SettingsPage> {
         });
       }
     } catch (e) {
-      print('Error loading backup info: $e');
+      log('Error loading backup info: $e');
     }
   }
 
@@ -75,7 +77,7 @@ class _SettingsPageState extends State<SettingsPage> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text(CANCEL),
+            child: const Text(cancel),
           ),
           ElevatedButton(
             onPressed: () {
@@ -84,7 +86,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 Navigator.pop(context);
               }
             },
-            child: const Text(SAVE),
+            child: const Text(save),
           ),
         ],
       ),
@@ -270,16 +272,16 @@ class _SettingsPageState extends State<SettingsPage> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Restore Backup?'),
-        content: const Text(BACKUP_WARNING),
+        content: const Text(backupWarning),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text(CANCEL),
+            child: const Text(cancel),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: warningColor),
             onPressed: () => Navigator.pop(context, true),
-            child: const Text(CONTINUE),
+            child: const Text(proceed),
           ),
         ],
       ),
@@ -293,13 +295,14 @@ class _SettingsPageState extends State<SettingsPage> {
 
       // Reload all providers
       if (mounted) {
-        await context.read<BudgetProvider>().init();
-        await context.read<ExpenseProvider>().init();
-        await context.read<VaultProvider>().init();
-        await context.read<SettingProvider>().init();
-        await context.read<ExpenseGoalProvider>().init();
-
-        ScaffoldMessenger.of(context).showSnackBar(
+        var readCtx = context.read;
+        var scaffoldCtx = ScaffoldMessenger.of(context);
+        await readCtx<BudgetProvider>().init();
+        await readCtx<ExpenseProvider>().init();
+        await readCtx<VaultProvider>().init();
+        await readCtx<SettingProvider>().init();
+        await readCtx<ExpenseGoalProvider>().init();
+        scaffoldCtx.showSnackBar(
           SnackBar(content: Text(result), backgroundColor: successColor),
         );
       }
@@ -320,7 +323,7 @@ class _SettingsPageState extends State<SettingsPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text(SETTINGS),
+        title: const Text(settings),
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -339,7 +342,7 @@ class _SettingsPageState extends State<SettingsPage> {
                             const Icon(Icons.cloud, color: primaryColor),
                             const SizedBox(width: 8),
                             Text(
-                              BACKUP_RESTORE,
+                              backupRestore,
                               style: Theme.of(context).textTheme.titleLarge?.copyWith(
                                     fontWeight: FontWeight.bold,
                                   ),
@@ -360,7 +363,7 @@ class _SettingsPageState extends State<SettingsPage> {
                           leading: const CircleAvatar(
                             child: Icon(Icons.account_circle),
                           ),
-                          title: Text(SIGNED_IN_AS),
+                          title: Text(signedInAs),
                           subtitle: Text(_driveService.currentUser?.email ?? ''),
                           trailing: PopupMenuButton<String>(
                             onSelected: (value) {
@@ -377,7 +380,7 @@ class _SettingsPageState extends State<SettingsPage> {
                                   children: [
                                     Icon(Icons.swap_horiz),
                                     SizedBox(width: 8),
-                                    Text(SWITCH_ACCOUNT),
+                                    Text(switchAccount),
                                   ],
                                 ),
                               ),
@@ -387,7 +390,7 @@ class _SettingsPageState extends State<SettingsPage> {
                                   children: [
                                     Icon(Icons.logout),
                                     SizedBox(width: 8),
-                                    Text(SIGN_OUT),
+                                    Text(signOut),
                                   ],
                                 ),
                               ),
@@ -398,19 +401,19 @@ class _SettingsPageState extends State<SettingsPage> {
                         if (_backupInfo != null)
                           ListTile(
                             leading: const Icon(Icons.info_outline),
-                            title: Text(LAST_BACKUP),
+                            title: Text(lastBackup),
                             subtitle: Text(
                               _backupInfo!['modifiedTime'] != null
                                   ? DateFormat('MMM dd, yyyy HH:mm').format(
                                       DateTime.parse(_backupInfo!['modifiedTime']),
                                     )
-                                  : NO_BACKUP_FOUND,
+                                  : noBackupFound,
                             ),
                           ),
                         const Divider(height: 1),
                         ListTile(
                           leading: const Icon(Icons.cloud_upload, color: primaryColor),
-                          title: Text(UPLOAD_BACKUP),
+                          title: Text(uploadBackup),
                           subtitle: const Text('Backup all data to Google Drive'),
                           trailing: const Icon(Icons.chevron_right),
                           onTap: _handleUploadBackup,
@@ -418,7 +421,7 @@ class _SettingsPageState extends State<SettingsPage> {
                         const Divider(height: 1),
                         ListTile(
                           leading: const Icon(Icons.cloud_download, color: successColor),
-                          title: Text(DOWNLOAD_BACKUP),
+                          title: Text(downloadBackup),
                           subtitle: const Text('Restore data from Google Drive'),
                           trailing: const Icon(Icons.chevron_right),
                           onTap: _backupInfo != null ? _handleDownloadBackup : null,
@@ -431,14 +434,14 @@ class _SettingsPageState extends State<SettingsPage> {
                               const Icon(Icons.cloud_off, size: 48, color: Colors.grey),
                               const SizedBox(height: 8),
                               Text(
-                                NOT_SIGNED_IN,
+                                notSignedIn,
                                 style: Theme.of(context).textTheme.bodyLarge,
                               ),
                               const SizedBox(height: 16),
                               ElevatedButton.icon(
                                 onPressed: _handleSignIn,
                                 icon: const Icon(Icons.login),
-                                label: Text(SIGN_IN_WITH_GOOGLE),
+                                label: Text(signInWithGoogle),
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: primaryColor,
                                   foregroundColor: Colors.white,
@@ -500,9 +503,9 @@ class _SettingsPageState extends State<SettingsPage> {
                                 selected: settingProvider.monthStartDay == day,
                                 onTap: () async {
                                   await settingProvider.setMonthStartDay(day);
-                                  Navigator.pop(context);
                                   // Recalculate budget with new period
                                   if (context.mounted) {
+                                    Navigator.pop(context);
                                     context.read<BudgetProvider>().recalculateWithCustomPeriod(
                                       settingProvider.monthStartDay,
                                       settingProvider.monthEndDay,
@@ -540,9 +543,9 @@ class _SettingsPageState extends State<SettingsPage> {
                                 selected: settingProvider.monthEndDay == day,
                                 onTap: () async {
                                   await settingProvider.setMonthEndDay(day);
-                                  Navigator.pop(context);
                                   // Recalculate budget with new period
                                   if (context.mounted) {
+                                    Navigator.pop(context);
                                     context.read<BudgetProvider>().recalculateWithCustomPeriod(
                                       settingProvider.monthStartDay,
                                       settingProvider.monthEndDay,

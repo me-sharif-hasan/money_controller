@@ -79,7 +79,7 @@ class _ReportPageState extends State<ReportPage> with SingleTickerProviderStateM
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: primaryColor.withOpacity(0.3),
+                color: primaryColor.withAlpha((0.3*255).round()),
                 blurRadius: 8,
                 offset: const Offset(0, 4),
               ),
@@ -153,7 +153,7 @@ class _ReportPageState extends State<ReportPage> with SingleTickerProviderStateM
 
                 return ListTile(
                   leading: CircleAvatar(
-                    backgroundColor: primaryColor.withOpacity(0.1),
+                    backgroundColor: primaryColor.withAlpha((0.1*255).round()),
                     child: Text(
                       category[0].toUpperCase(),
                       style: const TextStyle(
@@ -235,7 +235,7 @@ class _ReportPageState extends State<ReportPage> with SingleTickerProviderStateM
                         leading: Container(
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
-                            color: primaryColor.withOpacity(0.1),
+                            color: primaryColor.withAlpha((0.1*255).round()),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: const Icon(
@@ -401,7 +401,7 @@ class _ReportPageState extends State<ReportPage> with SingleTickerProviderStateM
           padding: const EdgeInsets.all(16),
           margin: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: primaryColor.withOpacity(0.1),
+            color: primaryColor.withAlpha((0.1*255).round()),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Row(

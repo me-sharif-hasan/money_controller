@@ -21,7 +21,7 @@ class ExpenseProvider with ChangeNotifier {
   }
 
   Future<void> _loadExpenses() async {
-    final list = await PrefsHelper.getList(PREF_EXPENSES);
+    final list = await PrefsHelper.getList(prefExpenses);
     _expenses = list.map((map) => ExpenseModel.fromMap(map)).toList();
   }
 
@@ -48,7 +48,7 @@ class ExpenseProvider with ChangeNotifier {
 
   Future<void> _saveExpenses() async {
     final list = _expenses.map((expense) => expense.toMap()).toList();
-    await PrefsHelper.saveList(PREF_EXPENSES, list);
+    await PrefsHelper.saveList(prefExpenses, list);
   }
 
   List<ExpenseModel> getExpensesByDate(DateTime date) {

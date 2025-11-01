@@ -23,6 +23,9 @@ class _VaultPageState extends State<VaultPage> {
   final _balanceController = TextEditingController();
   final _editAmountController = TextEditingController();
   final _editTypeController = TextEditingController();
+  
+  late final _readCtx=context.read;
+  late final _navigatorContext=Navigator.of(context);
 
   @override
   void dispose() {
@@ -40,9 +43,9 @@ class _VaultPageState extends State<VaultPage> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text(TRANSFER_TO_VAULT),
+        title: const Text(transferToVault),
         content: AppInputField(
-          label: AMOUNT,
+          label: amount,
           controller: _transferController,
           keyboardType: TextInputType.number,
           prefixIcon: Icons.savings,
@@ -50,15 +53,16 @@ class _VaultPageState extends State<VaultPage> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text(CANCEL),
+            child: const Text(cancel),
           ),
           ElevatedButton(
             onPressed: () async {
               final amount = double.tryParse(_transferController.text);
+              var readCtx = _readCtx;
               if (amount != null && amount > 0) {
-                await context.read<VaultProvider>().transferToVault(amount);
-                await context.read<BudgetProvider>().deductMoney(amount);
-                Navigator.pop(context);
+                await readCtx<VaultProvider>().transferToVault(amount);
+                await readCtx<BudgetProvider>().deductMoney(amount);
+                _navigatorContext.pop();
               }
             },
             child: const Text('Transfer'),
@@ -74,9 +78,9 @@ class _VaultPageState extends State<VaultPage> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text(WITHDRAW),
+        title: const Text(withdraw),
         content: AppInputField(
-          label: AMOUNT,
+          label: amount,
           controller: _withdrawController,
           keyboardType: TextInputType.number,
           prefixIcon: Icons.arrow_upward,
@@ -84,18 +88,18 @@ class _VaultPageState extends State<VaultPage> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text(CANCEL),
+            child: const Text(cancel),
           ),
           ElevatedButton(
             onPressed: () async {
               final amount = double.tryParse(_withdrawController.text);
               if (amount != null && amount > 0) {
-                await context.read<VaultProvider>().withdrawFromVault(amount);
-                await context.read<BudgetProvider>().addMoney(amount);
-                Navigator.pop(context);
+                await _readCtx<VaultProvider>().withdrawFromVault(amount);
+                await _readCtx<BudgetProvider>().addMoney(amount);
+                _navigatorContext.pop();
               }
             },
-            child: const Text(WITHDRAW),
+            child: const Text(withdraw),
           ),
         ],
       ),
@@ -103,14 +107,14 @@ class _VaultPageState extends State<VaultPage> {
   }
 
   void _showUpdateBalanceDialog() {
-    final vaultProvider = context.read<VaultProvider>();
+    final vaultProvider = _readCtx<VaultProvider>();
     final currentBalance = vaultProvider.balance;
     _balanceController.text = currentBalance.toStringAsFixed(2);
 
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text(UPDATE_BALANCE),
+        title: const Text(updateBalance),
         content: AppInputField(
           label: 'New Balance',
           controller: _balanceController,
@@ -120,7 +124,7 @@ class _VaultPageState extends State<VaultPage> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text(CANCEL),
+            child: const Text(cancel),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -129,17 +133,17 @@ class _VaultPageState extends State<VaultPage> {
                 final balanceChange = newBalance - currentBalance;
 
                 // Update vault balance
-                await context.read<VaultProvider>().updateVaultBalance(newBalance);
+                await _readCtx<VaultProvider>().updateVaultBalance(newBalance);
 
                 // Sync with budget: if vault increased, budget should decrease
                 if (balanceChange != 0) {
-                  await context.read<BudgetProvider>().deductMoney(balanceChange);
+                  await _readCtx<BudgetProvider>().deductMoney(balanceChange);
                 }
 
-                Navigator.pop(context);
+                _navigatorContext.pop();
               }
             },
-            child: const Text(UPDATE),
+            child: const Text(update),
           ),
         ],
       ),
@@ -153,12 +157,12 @@ class _VaultPageState extends State<VaultPage> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text(EDIT_TRANSACTION),
+        title: const Text(editTransaction),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             AppInputField(
-              label: AMOUNT,
+              label: amount,
               controller: _editAmountController,
               keyboardType: TextInputType.number,
               prefixIcon: Icons.money,
@@ -174,7 +178,7 @@ class _VaultPageState extends State<VaultPage> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text(CANCEL),
+            child: const Text(cancel),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -192,17 +196,17 @@ class _VaultPageState extends State<VaultPage> {
                 );
 
                 // Update vault transaction
-                await context.read<VaultProvider>().updateTransaction(updatedTransaction);
+                await _readCtx<VaultProvider>().updateTransaction(updatedTransaction);
 
                 // Sync with budget: if vault balance increased, budget should decrease
                 if (balanceChange != 0) {
-                  await context.read<BudgetProvider>().deductMoney(balanceChange);
+                  await _readCtx<BudgetProvider>().deductMoney(balanceChange);
                 }
 
-                Navigator.pop(context);
+                _navigatorContext.pop();
               }
             },
-            child: const Text(UPDATE),
+            child: const Text(update),
           ),
         ],
       ),
@@ -213,17 +217,17 @@ class _VaultPageState extends State<VaultPage> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text(DELETE),
+        title: const Text(delete),
         content: const Text('Are you sure you want to delete this transaction?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text(CANCEL),
+            child: const Text(cancel),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: dangerColor),
             onPressed: () async {
-              final vaultProvider = context.read<VaultProvider>();
+              final vaultProvider = _readCtx<VaultProvider>();
 
               // Find the transaction to get its amount before deleting
               final transaction = vaultProvider.transactions.firstWhere(
@@ -235,11 +239,11 @@ class _VaultPageState extends State<VaultPage> {
               await vaultProvider.deleteTransaction(transactionId);
 
               // Return money to budget: if vault decreased, budget should increase
-              await context.read<BudgetProvider>().addMoney(transaction.amount);
+              await _readCtx<BudgetProvider>().addMoney(transaction.amount);
 
-              Navigator.pop(context);
+              _navigatorContext.pop();
             },
-            child: const Text(DELETE),
+            child: const Text(delete),
           ),
         ],
       ),
@@ -253,7 +257,7 @@ class _VaultPageState extends State<VaultPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text(VAULT),
+        title: const Text(vault),
         actions: [
           PopupMenuButton<String>(
             onSelected: (value) {
@@ -270,7 +274,7 @@ class _VaultPageState extends State<VaultPage> {
                   children: [
                     Icon(Icons.edit),
                     SizedBox(width: 8),
-                    Text(UPDATE_BALANCE),
+                    Text(updateBalance),
                   ],
                 ),
               ),
@@ -280,7 +284,7 @@ class _VaultPageState extends State<VaultPage> {
                   children: [
                     Icon(Icons.arrow_upward),
                     SizedBox(width: 8),
-                    Text(WITHDRAW),
+                    Text(withdraw),
                   ],
                 ),
               ),
@@ -292,11 +296,11 @@ class _VaultPageState extends State<VaultPage> {
         children: [
           Container(
             padding: const EdgeInsets.all(16),
-            color: successColor.withOpacity(0.1),
+            color: successColor.withAlpha((0.1*255).round()),
             child: Column(
               children: [
                 AmountCard(
-                  title: VAULT_BALANCE,
+                  title: vaultBalance,
                   amount: vaultProvider.balance,
                   currencySymbol: settingProvider.currencySymbol,
                   color: successColor,
@@ -304,7 +308,7 @@ class _VaultPageState extends State<VaultPage> {
                 ),
                 const SizedBox(height: 16),
                 AppButton(
-                  text: TRANSFER_TO_VAULT,
+                  text: transferToVault,
                   onPressed: _showTransferDialog,
                   backgroundColor: successColor,
                   icon: Icons.arrow_downward,
@@ -318,7 +322,7 @@ class _VaultPageState extends State<VaultPage> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  TRANSACTIONS,
+                  transactions,
                   style: Theme.of(context).textTheme.headlineSmall,
                 ),
               ],
@@ -326,7 +330,7 @@ class _VaultPageState extends State<VaultPage> {
           ),
           Expanded(
             child: vaultProvider.transactions.isEmpty
-                ? const Center(child: Text(NO_DATA))
+                ? const Center(child: Text(noData))
                 : ListView.builder(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     itemCount: vaultProvider.transactions.length,
@@ -336,7 +340,7 @@ class _VaultPageState extends State<VaultPage> {
                       return Card(
                         child: ListTile(
                           leading: CircleAvatar(
-                            backgroundColor: (isPositive ? successColor : dangerColor).withOpacity(0.1),
+                            backgroundColor: (isPositive ? successColor : dangerColor).withAlpha((0.1*255).round()),
                             child: Icon(
                               isPositive ? Icons.arrow_downward : Icons.arrow_upward,
                               color: isPositive ? successColor : dangerColor,
@@ -369,7 +373,7 @@ class _VaultPageState extends State<VaultPage> {
                                       children: [
                                         Icon(Icons.edit, size: 20),
                                         SizedBox(width: 8),
-                                        Text(EDIT),
+                                        Text(edit),
                                       ],
                                     ),
                                   ),
@@ -379,7 +383,7 @@ class _VaultPageState extends State<VaultPage> {
                                       children: [
                                         Icon(Icons.delete, size: 20, color: dangerColor),
                                         SizedBox(width: 8),
-                                        Text(DELETE),
+                                        Text(delete),
                                       ],
                                     ),
                                   ),

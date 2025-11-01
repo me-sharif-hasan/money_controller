@@ -35,7 +35,7 @@ class BudgetProvider with ChangeNotifier {
   }
 
   Future<void> _loadSettings() async {
-    final data = await PrefsHelper.getData(PREF_SETTINGS);
+    final data = await PrefsHelper.getData(prefSettings);
     if (data != null) {
       _monthStartDay = data['monthStartDay'] as int? ?? 1;
       _monthEndDay = data['monthEndDay'] as int? ?? 31;
@@ -43,32 +43,32 @@ class BudgetProvider with ChangeNotifier {
   }
 
   Future<void> _loadTotalMoney() async {
-    final money = await PrefsHelper.getDouble(PREF_TOTAL_MONEY);
+    final money = await PrefsHelper.getDouble(prefTotalMoney);
     _totalMoney = money ?? 0.0;
   }
 
   Future<void> _loadFixedCosts() async {
-    final list = await PrefsHelper.getList(PREF_FIXED_COSTS);
+    final list = await PrefsHelper.getList(prefFixedCosts);
     _fixedCosts = list.map((map) => FixedCostModel.fromMap(map)).toList();
   }
 
   Future<void> setTotalMoney(double amount) async {
     _totalMoney = amount;
-    await PrefsHelper.saveDouble(PREF_TOTAL_MONEY, amount);
+    await PrefsHelper.saveDouble(prefTotalMoney, amount);
     await _calculateSummary();
     notifyListeners();
   }
 
   Future<void> addMoney(double amount) async {
     _totalMoney += amount;
-    await PrefsHelper.saveDouble(PREF_TOTAL_MONEY, _totalMoney);
+    await PrefsHelper.saveDouble(prefTotalMoney, _totalMoney);
     await _calculateSummary();
     notifyListeners();
   }
 
   Future<void> deductMoney(double amount) async {
     _totalMoney -= amount;
-    await PrefsHelper.saveDouble(PREF_TOTAL_MONEY, _totalMoney);
+    await PrefsHelper.saveDouble(prefTotalMoney, _totalMoney);
     await _calculateSummary();
     notifyListeners();
   }
@@ -99,7 +99,7 @@ class BudgetProvider with ChangeNotifier {
 
   Future<void> _saveFixedCosts() async {
     final list = _fixedCosts.map((cost) => cost.toMap()).toList();
-    await PrefsHelper.saveList(PREF_FIXED_COSTS, list);
+    await PrefsHelper.saveList(prefFixedCosts, list);
   }
 
   void setExpenseGoalRequirement(double requirement) {

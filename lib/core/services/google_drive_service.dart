@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:developer';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:googleapis/drive/v3.dart' as ga;
 import 'package:http/http.dart' as http;
@@ -50,18 +51,18 @@ class GoogleDriveService {
     // Listen to sign-in state changes
     _googleSignIn.onCurrentUserChanged.listen((account) {
       _currentUser = account;
-      print('GoogleSignIn: User changed to ${account?.email ?? "null"}');
+      log('GoogleSignIn: User changed to ${account?.email ?? "null"}');
     });
 
     // Try to sign in silently (restore previous session)
     try {
-      print('GoogleSignIn: Attempting silent sign-in...');
+      log('GoogleSignIn: Attempting silent sign-in...');
 
       // First, check if there's a current user without making a call
       final currentUser = _googleSignIn.currentUser;
       if (currentUser != null) {
         _currentUser = currentUser;
-        print('GoogleSignIn: Found existing session for ${currentUser.email}');
+        log('GoogleSignIn: Found existing session for ${currentUser.email}');
         _isInitialized = true;
         return;
       }
@@ -70,14 +71,14 @@ class GoogleDriveService {
       final account = await _googleSignIn.signInSilently(suppressErrors: true);
       if (account != null) {
         _currentUser = account;
-        print('GoogleSignIn: Silent sign-in successful for ${account.email}');
+        log('GoogleSignIn: Silent sign-in successful for ${account.email}');
       } else {
-        print('GoogleSignIn: No previous session found');
+        log('GoogleSignIn: No previous session found');
       }
     } catch (e) {
       // Catch FedCM and other errors gracefully
-      print('GoogleSignIn: Silent sign-in failed - $e');
-      print('GoogleSignIn: This is normal on first use or if session expired');
+      log('GoogleSignIn: Silent sign-in failed - $e');
+      log('GoogleSignIn: This is normal on first use or if session expired');
     }
 
     _isInitialized = true;
@@ -88,23 +89,23 @@ class GoogleDriveService {
     try {
       // Check if already signed in
       if (_currentUser != null) {
-        print('GoogleSignIn: Already signed in as ${_currentUser!.email}');
+        log('GoogleSignIn: Already signed in as ${_currentUser!.email}');
         return _currentUser;
       }
 
-      print('GoogleSignIn: Starting interactive sign-in...');
+      log('GoogleSignIn: Starting interactive sign-in...');
       final account = await _googleSignIn.signIn();
 
       if (account != null) {
         // Don't manually set _currentUser, let the listener handle it
-        print('GoogleSignIn: Sign-in successful for ${account.email}');
+        log('GoogleSignIn: Sign-in successful for ${account.email}');
       } else {
-        print('GoogleSignIn: Sign-in cancelled by user');
+        log('GoogleSignIn: Sign-in cancelled by user');
       }
 
       return account;
     } catch (e) {
-      print('GoogleSignIn: Sign-in error - $e');
+      log('GoogleSignIn: Sign-in error - $e');
       rethrow;
     }
   }
@@ -114,9 +115,9 @@ class GoogleDriveService {
     try {
       await _googleSignIn.signOut();
       // Don't manually set _currentUser, let the listener handle it
-      print('GoogleSignIn: Signed out successfully');
+      log('GoogleSignIn: Signed out successfully');
     } catch (e) {
-      print('GoogleSignIn: Sign-out error - $e');
+      log('GoogleSignIn: Sign-out error - $e');
       rethrow;
     }
   }
@@ -124,12 +125,12 @@ class GoogleDriveService {
   // Switch account
   Future<GoogleSignInAccount?> switchAccount() async {
     try {
-      print('GoogleSignIn: Disconnecting current account...');
+      log('GoogleSignIn: Disconnecting current account...');
       await _googleSignIn.disconnect();
-      print('GoogleSignIn: Starting new sign-in...');
+      log('GoogleSignIn: Starting new sign-in...');
       return await signIn();
     } catch (e) {
-      print('GoogleSignIn: Switch account error - $e');
+      log('GoogleSignIn: Switch account error - $e');
       rethrow;
     }
   }
@@ -141,7 +142,7 @@ class GoogleDriveService {
       // Try to get current user without making a network call
       _currentUser = _googleSignIn.currentUser;
       if (_currentUser != null) {
-        print('GoogleSignIn: Restored current user ${_currentUser!.email}');
+        log('GoogleSignIn: Restored current user ${_currentUser!.email}');
       } else {
         throw Exception('User not signed in. Please sign in first.');
       }
@@ -152,7 +153,7 @@ class GoogleDriveService {
       final authClient = await _googleSignIn.authenticatedClient();
       if (authClient == null) {
         // Token might be expired, try silent sign-in to refresh
-        print('GoogleSignIn: Token expired or invalid, attempting refresh...');
+        log('GoogleSignIn: Token expired or invalid, attempting refresh...');
 
         // Try silent sign-in with suppressErrors
         final account = await _googleSignIn.signInSilently(suppressErrors: true);
@@ -161,12 +162,12 @@ class GoogleDriveService {
           throw Exception('Session expired. Please sign in again.');
         }
         _currentUser = account;
-        print('GoogleSignIn: Token refreshed successfully');
+        log('GoogleSignIn: Token refreshed successfully');
       } else {
-        print('GoogleSignIn: Authentication verified');
+        log('GoogleSignIn: Authentication verified');
       }
     } catch (e) {
-      print('GoogleSignIn: Authentication check failed - $e');
+      log('GoogleSignIn: Authentication check failed - $e');
 
       // If it's a specific auth error, provide helpful message
       if (e.toString().contains('Session expired')) {
@@ -176,7 +177,7 @@ class GoogleDriveService {
       // For other errors, try one more time with currentUser
       if (_googleSignIn.currentUser != null) {
         _currentUser = _googleSignIn.currentUser;
-        print('GoogleSignIn: Using current user as fallback');
+        log('GoogleSignIn: Using current user as fallback');
       } else {
         throw Exception('Authentication failed. Please sign in again.');
       }
@@ -188,13 +189,13 @@ class GoogleDriveService {
     final data = <String, dynamic>{};
 
     // Get all data from shared preferences
-    data['total_money'] = await PrefsHelper.getDouble(PREF_TOTAL_MONEY) ?? 0.0;
-    data['fixed_costs'] = await PrefsHelper.getList(PREF_FIXED_COSTS);
-    data['expenses'] = await PrefsHelper.getList(PREF_EXPENSES);
-    data['vault_data'] = await PrefsHelper.getData(PREF_VAULT);
-    data['settings'] = await PrefsHelper.getData(PREF_SETTINGS);
-    data['saving_goal'] = await PrefsHelper.getData(PREF_GOAL);
-    data['expense_goals'] = await PrefsHelper.getList(PREF_EXPENSE_GOALS);
+    data['total_money'] = await PrefsHelper.getDouble(prefTotalMoney) ?? 0.0;
+    data['fixed_costs'] = await PrefsHelper.getList(prefFixedCosts);
+    data['expenses'] = await PrefsHelper.getList(prefExpenses);
+    data['vault_data'] = await PrefsHelper.getData(prefVault);
+    data['settings'] = await PrefsHelper.getData(prefSettings);
+    data['saving_goal'] = await PrefsHelper.getData(prefGoal);
+    data['expense_goals'] = await PrefsHelper.getList(prefExpenseGoals);
 
     // Add metadata
     data['backup_version'] = '1.0';
@@ -208,46 +209,46 @@ class GoogleDriveService {
   Future<void> _restoreAllAppData(Map<String, dynamic> data) async {
     // Restore each data type with proper type casting
     if (data.containsKey('total_money')) {
-      await PrefsHelper.saveDouble(PREF_TOTAL_MONEY, (data['total_money'] as num).toDouble());
+      await PrefsHelper.saveDouble(prefTotalMoney, (data['total_money'] as num).toDouble());
     }
 
     if (data.containsKey('fixed_costs') && data['fixed_costs'] != null) {
       final List<dynamic> rawList = data['fixed_costs'] as List<dynamic>;
       final List<Map<String, dynamic>> fixedCosts =
           rawList.map((item) => Map<String, dynamic>.from(item as Map)).toList();
-      await PrefsHelper.saveList(PREF_FIXED_COSTS, fixedCosts);
+      await PrefsHelper.saveList(prefFixedCosts, fixedCosts);
     }
 
     if (data.containsKey('expenses') && data['expenses'] != null) {
       final List<dynamic> rawList = data['expenses'] as List<dynamic>;
       final List<Map<String, dynamic>> expenses =
           rawList.map((item) => Map<String, dynamic>.from(item as Map)).toList();
-      await PrefsHelper.saveList(PREF_EXPENSES, expenses);
+      await PrefsHelper.saveList(prefExpenses, expenses);
     }
 
     if (data.containsKey('vault_data') && data['vault_data'] != null) {
       final Map<String, dynamic> vaultData =
           Map<String, dynamic>.from(data['vault_data'] as Map);
-      await PrefsHelper.saveData(PREF_VAULT, vaultData);
+      await PrefsHelper.saveData(prefVault, vaultData);
     }
 
     if (data.containsKey('settings') && data['settings'] != null) {
       final Map<String, dynamic> settings =
           Map<String, dynamic>.from(data['settings'] as Map);
-      await PrefsHelper.saveData(PREF_SETTINGS, settings);
+      await PrefsHelper.saveData(prefSettings, settings);
     }
 
     if (data.containsKey('saving_goal') && data['saving_goal'] != null) {
       final Map<String, dynamic> savingGoal =
           Map<String, dynamic>.from(data['saving_goal'] as Map);
-      await PrefsHelper.saveData(PREF_GOAL, savingGoal);
+      await PrefsHelper.saveData(prefGoal, savingGoal);
     }
 
     if (data.containsKey('expense_goals') && data['expense_goals'] != null) {
       final List<dynamic> rawList = data['expense_goals'] as List<dynamic>;
       final List<Map<String, dynamic>> expenseGoals =
           rawList.map((item) => Map<String, dynamic>.from(item as Map)).toList();
-      await PrefsHelper.saveList(PREF_EXPENSE_GOALS, expenseGoals);
+      await PrefsHelper.saveList(prefExpenseGoals, expenseGoals);
     }
   }
 
@@ -257,7 +258,7 @@ class GoogleDriveService {
     await _ensureAuthenticated();
 
     try {
-      print('GoogleSignIn: Getting authenticated client for upload...');
+      log('GoogleSignIn: Getting authenticated client for upload...');
       // Get authenticated client
       final authClient = await _googleSignIn.authenticatedClient();
       if (authClient == null) {
@@ -297,7 +298,7 @@ class GoogleDriveService {
         return 'Backup created successfully (${response.name})';
       }
     } catch (e) {
-      print('Upload error: $e');
+      log('Upload error: $e');
       throw Exception('Failed to upload backup: $e');
     }
   }
@@ -316,7 +317,7 @@ class GoogleDriveService {
       }
       return null;
     } catch (e) {
-      print('Error finding backup file: $e');
+      log('Error finding backup file: $e');
       return null;
     }
   }
@@ -327,7 +328,7 @@ class GoogleDriveService {
     await _ensureAuthenticated();
 
     try {
-      print('GoogleSignIn: Getting authenticated client for download...');
+      log('GoogleSignIn: Getting authenticated client for download...');
       // Get authenticated client
       final authClient = await _googleSignIn.authenticatedClient();
       if (authClient == null) {
@@ -365,7 +366,7 @@ class GoogleDriveService {
       final backupDate = backupData['backup_date'] ?? 'Unknown';
       return 'Backup restored successfully\nBackup date: $backupDate';
     } catch (e) {
-      print('Download error: $e');
+      log('Download error: $e');
       throw Exception('Failed to download backup: $e');
     }
   }
@@ -396,7 +397,7 @@ class GoogleDriveService {
         'id': backupFile.id,
       };
     } catch (e) {
-      print('Error getting backup info: $e');
+      log('Error getting backup info: $e');
       return null;
     }
   }
@@ -420,7 +421,7 @@ class GoogleDriveService {
         await driveApi.files.delete(backupFile.id!);
       }
     } catch (e) {
-      print('Delete error: $e');
+      log('Delete error: $e');
       throw Exception('Failed to delete backup: $e');
     }
   }

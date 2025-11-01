@@ -23,7 +23,7 @@ class InfoTile extends StatelessWidget {
       child: ListTile(
         leading: icon != null
             ? CircleAvatar(
-                backgroundColor: (iconColor ?? primaryColor).withOpacity(0.1),
+                backgroundColor: (iconColor ?? primaryColor).withAlpha((0.1*255).round()),
                 child: Icon(icon, color: iconColor ?? primaryColor),
               )
             : null,

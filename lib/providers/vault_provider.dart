@@ -23,7 +23,7 @@ class VaultProvider with ChangeNotifier {
   }
 
   Future<void> _loadVault() async {
-    final data = await PrefsHelper.getData(PREF_VAULT);
+    final data = await PrefsHelper.getData(prefVault);
     if (data != null) {
       _vault = VaultModel.fromMap(data);
     }
@@ -70,7 +70,7 @@ class VaultProvider with ChangeNotifier {
   }
 
   Future<void> _saveVault() async {
-    await PrefsHelper.saveData(PREF_VAULT, _vault.toMap());
+    await PrefsHelper.saveData(prefVault, _vault.toMap());
   }
 
   Future<void> updateVaultBalance(double newBalance) async {

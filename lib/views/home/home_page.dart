@@ -59,7 +59,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> _checkFirstTimeUser() async {
-    final completed = await PrefsHelper.getBool(PREF_ONBOARDING_COMPLETED) ?? false;
+    final completed = await PrefsHelper.getBool(prefOnboardingCompleted) ?? false;
     if (!completed) {
       // Delay to ensure widgets are built
       Future.delayed(const Duration(milliseconds: 500), () {
@@ -73,14 +73,14 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> _completeTutorial() async {
-    await PrefsHelper.saveBool(PREF_ONBOARDING_COMPLETED, true);
+    await PrefsHelper.saveBool(prefOnboardingCompleted, true);
     setState(() {
       _showTutorial = false;
     });
   }
 
   Future<void> _skipTutorial() async {
-    await PrefsHelper.saveBool(PREF_ONBOARDING_COMPLETED, true);
+    await PrefsHelper.saveBool(prefOnboardingCompleted, true);
     setState(() {
       _showTutorial = false;
     });
@@ -99,9 +99,9 @@ class _HomePageState extends State<HomePage> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text(ADD_MONEY),
+        title: const Text(addMoney),
         content: AppInputField(
-          label: AMOUNT,
+          label: amount,
           controller: _addMoneyController,
           keyboardType: TextInputType.number,
           prefixIcon: Icons.money,
@@ -109,7 +109,7 @@ class _HomePageState extends State<HomePage> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text(CANCEL),
+            child: const Text(cancel),
           ),
           ElevatedButton(
             onPressed: () {
@@ -120,7 +120,7 @@ class _HomePageState extends State<HomePage> {
                 Navigator.pop(context);
               }
             },
-            child: const Text(ADD),
+            child: const Text(add),
           ),
         ],
       ),
@@ -144,7 +144,7 @@ class _HomePageState extends State<HomePage> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text(CANCEL),
+            child: const Text(cancel),
           ),
           ElevatedButton(
             onPressed: () {
@@ -155,7 +155,7 @@ class _HomePageState extends State<HomePage> {
                 Navigator.pop(context);
               }
             },
-            child: const Text(SAVE),
+            child: const Text(save),
           ),
         ],
       ),
@@ -170,28 +170,28 @@ class _HomePageState extends State<HomePage> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text(ADD_EXPENSE),
+        title: const Text(addExpense),
         content: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               AppInputField(
-                label: AMOUNT,
+                label: amount,
                 controller: _expenseAmountController,
                 keyboardType: TextInputType.number,
                 prefixIcon: Icons.money,
               ),
               const SizedBox(height: 16),
               AppInputField(
-                label: DESCRIPTION,
+                label: description,
                 controller: _expenseDescriptionController,
                 prefixIcon: Icons.description,
               ),
               const SizedBox(height: 16),
               DropdownButtonFormField<String>(
-                value: _selectedCategory,
+                initialValue: _selectedCategory,
                 decoration: const InputDecoration(
-                  labelText: CATEGORY,
+                  labelText: category,
                   prefixIcon: Icon(Icons.category),
                 ),
                 items: _categories.map((category) {
@@ -212,7 +212,7 @@ class _HomePageState extends State<HomePage> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text(CANCEL),
+            child: const Text(cancel),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -227,14 +227,19 @@ class _HomePageState extends State<HomePage> {
                   createdAt: DateTime.now(),
                   updatedAt: DateTime.now(),
                 );
-                await context.read<ExpenseProvider>().addExpense(expense);
-                await context.read<BudgetProvider>().deductMoney(amount);
+                if(context.mounted){
+                  await context.read<ExpenseProvider>().addExpense(expense);
+                }
+                if(context.mounted){
+                  await context.read<BudgetProvider>().deductMoney(amount);
+                }
                 _expenseAmountController.clear();
                 _expenseDescriptionController.clear();
+                if(!context.mounted) return;
                 Navigator.pop(context);
               }
             },
-            child: const Text(ADD),
+            child: const Text(add),
           ),
         ],
       ),
@@ -257,22 +262,22 @@ class _HomePageState extends State<HomePage> {
             mainAxisSize: MainAxisSize.min,
             children: [
               AppInputField(
-                label: AMOUNT,
+                label: amount,
                 controller: _expenseAmountController,
                 keyboardType: TextInputType.number,
                 prefixIcon: Icons.money,
               ),
               const SizedBox(height: 16),
               AppInputField(
-                label: DESCRIPTION,
+                label: description,
                 controller: _expenseDescriptionController,
                 prefixIcon: Icons.description,
               ),
               const SizedBox(height: 16),
               DropdownButtonFormField<String>(
-                value: _selectedCategory,
+                initialValue: _selectedCategory,
                 decoration: const InputDecoration(
-                  labelText: CATEGORY,
+                  labelText: category,
                   prefixIcon: Icon(Icons.category),
                 ),
                 items: _categories.map((category) {
@@ -293,7 +298,7 @@ class _HomePageState extends State<HomePage> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text(CANCEL),
+            child: const Text(cancel),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -312,16 +317,17 @@ class _HomePageState extends State<HomePage> {
                 await context.read<ExpenseProvider>().updateExpense(updatedExpense);
 
                 // Adjust total money based on difference
-                if (difference > 0) {
+                if (difference > 0 && context.mounted) {
                   await context.read<BudgetProvider>().deductMoney(difference);
-                } else if (difference < 0) {
+                } else if (difference < 0 && context.mounted) {
                   await context.read<BudgetProvider>().addMoney(difference.abs());
                 }
 
+                if(!context.mounted) return;
                 Navigator.pop(context);
               }
             },
-            child: const Text(SAVE),
+            child: const Text(save),
           ),
         ],
       ),
@@ -394,7 +400,7 @@ class _HomePageState extends State<HomePage> {
   ) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text(APP_NAME),
+        title: const Text(appName),
         actions: [
           IconButton(
             key: _drawerKey,
@@ -420,7 +426,7 @@ class _HomePageState extends State<HomePage> {
                   Icon(Icons.account_balance_wallet, size: 48, color: Colors.white),
                   SizedBox(height: 8),
                   Text(
-                    APP_NAME,
+                    appName,
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 24,
@@ -432,12 +438,12 @@ class _HomePageState extends State<HomePage> {
             ),
             ListTile(
               leading: const Icon(Icons.home),
-              title: const Text(HOME),
+              title: const Text(home),
               onTap: () => Navigator.pop(context),
             ),
             ListTile(
               leading: const Icon(Icons.receipt_long),
-              title: const Text(FIXED_COSTS),
+              title: const Text(fixedCosts),
               onTap: () {
                 Navigator.pop(context);
                 Navigator.push(
@@ -448,7 +454,7 @@ class _HomePageState extends State<HomePage> {
             ),
             ListTile(
               leading: const Icon(Icons.savings),
-              title: const Text(VAULT),
+              title: const Text(vault),
               onTap: () {
                 Navigator.pop(context);
                 Navigator.push(
@@ -459,7 +465,7 @@ class _HomePageState extends State<HomePage> {
             ),
             ListTile(
               leading: const Icon(Icons.flag),
-              title: const Text(EXPENSE_GOALS),
+              title: const Text(expenseGoals),
               onTap: () {
                 Navigator.pop(context);
                 Navigator.push(
@@ -481,7 +487,7 @@ class _HomePageState extends State<HomePage> {
             ),
             ListTile(
               leading: const Icon(Icons.settings),
-              title: const Text(SETTINGS),
+              title: const Text(settings),
               onTap: () {
                 Navigator.pop(context);
                 Navigator.push(
@@ -506,7 +512,7 @@ class _HomePageState extends State<HomePage> {
                     child: Stack(
                       children: [
                         AmountCard(
-                          title: TOTAL_MONEY,
+                          title: totalMoney,
                           amount: budgetProvider.totalMoney,
                           currencySymbol: settingProvider.currencySymbol,
                           color: primaryColor,
@@ -532,7 +538,7 @@ class _HomePageState extends State<HomePage> {
                         child: Container(
                           key: _dailyAllowanceKey,
                           child: AmountCard(
-                            title: DAILY_ALLOWANCE,
+                            title: dailyAllowance,
                             amount: budgetProvider.summary?.dailyAllowance ?? 0,
                             currencySymbol: settingProvider.currencySymbol,
                             color: successColor,
@@ -545,7 +551,7 @@ class _HomePageState extends State<HomePage> {
                         child: Container(
                           key: _remainingBalanceKey,
                           child: AmountCard(
-                            title: REMAINING_BALANCE,
+                            title: remainingBalance,
                             amount: budgetProvider.summary?.remainingBalance ?? 0,
                             currencySymbol: settingProvider.currencySymbol,
                             color: warningColor,
@@ -562,7 +568,7 @@ class _HomePageState extends State<HomePage> {
                         child: Container(
                           key: _addMoneyKey,
                           child: AppButton(
-                            text: ADD_MONEY,
+                            text: addMoney,
                             onPressed: _showAddMoneyDialog,
                             icon: Icons.add,
                           ),
@@ -573,7 +579,7 @@ class _HomePageState extends State<HomePage> {
                         child: Container(
                           key: _addExpenseKey,
                           child: AppButton(
-                            text: ADD_EXPENSE,
+                            text: addExpense,
                             onPressed: _showAddExpenseDialog,
                             backgroundColor: dangerColor,
                             icon: Icons.remove,
@@ -614,7 +620,7 @@ class _HomePageState extends State<HomePage> {
                     const Center(
                       child: Padding(
                         padding: EdgeInsets.all(24),
-                        child: Text(NO_DATA),
+                        child: Text(noData),
                       ),
                     )
                   else
@@ -650,7 +656,7 @@ class _HomePageState extends State<HomePage> {
                                         children: [
                                           Icon(Icons.edit),
                                           SizedBox(width: 8),
-                                          Text(EDIT),
+                                          Text(edit),
                                         ],
                                       ),
                                     ),
@@ -660,7 +666,7 @@ class _HomePageState extends State<HomePage> {
                                         children: [
                                           Icon(Icons.delete, color: dangerColor),
                                           SizedBox(width: 8),
-                                          Text(DELETE, style: TextStyle(color: dangerColor)),
+                                          Text(delete, style: TextStyle(color: dangerColor)),
                                         ],
                                       ),
                                     ),
@@ -670,8 +676,12 @@ class _HomePageState extends State<HomePage> {
                                       _showEditExpenseDialog(expense);
                                     } else if (value == 'delete') {
                                       // Return money back when deleting expense
-                                      await context.read<BudgetProvider>().addMoney(expense.amount);
-                                      await context.read<ExpenseProvider>().deleteExpense(expense.id);
+                                      if(context.mounted){
+                                        await context.read<BudgetProvider>().addMoney(expense.amount);
+                                      }
+                                      if(context.mounted) {
+                                        await context.read<ExpenseProvider>().deleteExpense(expense.id);
+                                      }
                                     }
                                   },
                                 ),
