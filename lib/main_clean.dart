@@ -29,7 +29,7 @@ class MyApp extends StatelessWidget {
       child: Consumer<SettingProvider>(
         builder: (context, settingProvider, child) {
           return MaterialApp(
-            title: 'Smart Daily Budget',
+            title: 'Money Controller',
             theme: AppTheme.lightTheme,
             debugShowCheckedModeBanner: false,
             home: const HomePage(),

@@ -1,4 +1,4 @@
-# Testing Checklist - Smart Daily Budget
+# Testing Checklist - Money Controller
 
 ## ✅ Core Functionality Testing
 

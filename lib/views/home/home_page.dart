@@ -100,11 +100,14 @@ class _HomePageState extends State<HomePage> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text(addMoney),
-        content: AppInputField(
-          label: amount,
+        content: TextField(
           controller: _addMoneyController,
           keyboardType: TextInputType.number,
-          prefixIcon: Icons.money,
+          autofocus: true,
+          decoration: const InputDecoration(
+            labelText: amount,
+            prefixIcon: Icon(Icons.money),
+          ),
         ),
         actions: [
           TextButton(
@@ -135,11 +138,14 @@ class _HomePageState extends State<HomePage> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Edit Total Money'),
-        content: AppInputField(
-          label: 'Total Amount',
+        content: TextField(
           controller: _addMoneyController,
           keyboardType: TextInputType.number,
-          prefixIcon: Icons.edit,
+          autofocus: true,
+          decoration: const InputDecoration(
+            labelText: 'Total Amount',
+            prefixIcon: Icon(Icons.account_balance_wallet),
+          ),
         ),
         actions: [
           TextButton(
@@ -415,88 +421,105 @@ class _HomePageState extends State<HomePage> {
         ],
       ),
       drawer: Drawer(
-        child: ListView(
-          children: [
-            const DrawerHeader(
-              decoration: BoxDecoration(color: primaryColor),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  Icon(Icons.account_balance_wallet, size: 48, color: Colors.white),
-                  SizedBox(height: 8),
-                  Text(
-                    appName,
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
+        backgroundColor: Colors.white,
+        child: SafeArea(
+          top: false,
+          child: Column(
+            children: [
+              DrawerHeader(
+                decoration: const BoxDecoration(color: primaryColor),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Image.asset(
+                      'assets/logo.png',
+                      width: 48,
+                      height: 48,
+                      errorBuilder: (context, error, stackTrace) {
+                        return const Icon(Icons.account_balance_wallet, size: 48, color: Colors.white);
+                      },
                     ),
-                  ),
-                ],
+                    const SizedBox(width: 16),
+                    const Text(
+                      'Money Controller',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
-            ListTile(
-              leading: const Icon(Icons.home),
-              title: const Text(home),
-              onTap: () => Navigator.pop(context),
-            ),
-            ListTile(
-              leading: const Icon(Icons.receipt_long),
-              title: const Text(fixedCosts),
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const FixedCostPage()),
-                );
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.savings),
-              title: const Text(vault),
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const VaultPage()),
-                );
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.flag),
-              title: const Text(expenseGoals),
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const ExpenseGoalPage()),
-                );
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.analytics),
-              title: const Text('Reports'),
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const ReportPage()),
-                );
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.settings),
-              title: const Text(settings),
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const SettingsPage()),
-                );
-              },
-            ),
-          ],
+              Expanded(
+                child: ListView(
+                  padding: EdgeInsets.zero,
+                  children: [
+                    ListTile(
+                      leading: const Icon(Icons.home),
+                      title: const Text(home),
+                      onTap: () => Navigator.pop(context),
+                    ),
+                    ListTile(
+                      leading: const Icon(Icons.receipt_long),
+                      title: const Text(fixedCosts),
+                      onTap: () {
+                        Navigator.pop(context);
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => const FixedCostPage()),
+                        );
+                      },
+                    ),
+                    ListTile(
+                      leading: const Icon(Icons.savings),
+                      title: const Text(vault),
+                      onTap: () {
+                        Navigator.pop(context);
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => const VaultPage()),
+                        );
+                      },
+                    ),
+                    ListTile(
+                      leading: const Icon(Icons.flag),
+                      title: const Text(expenseGoals),
+                      onTap: () {
+                        Navigator.pop(context);
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => const ExpenseGoalPage()),
+                        );
+                      },
+                    ),
+                    ListTile(
+                      leading: const Icon(Icons.analytics),
+                      title: const Text('Reports'),
+                      onTap: () {
+                        Navigator.pop(context);
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => const ReportPage()),
+                        );
+                      },
+                    ),
+                    ListTile(
+                      leading: const Icon(Icons.settings),
+                      title: const Text(settings),
+                      onTap: () {
+                        Navigator.pop(context);
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => const SettingsPage()),
+                        );
+                      },
+                    ),
+                  ],
+                  ),
+              ),
+            ],
+          ),
         ),
       ),
       body: budgetProvider.isLoading

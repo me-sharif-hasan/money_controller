@@ -1,4 +1,4 @@
-# Smart Daily Budget
+# Money Controller
 
 A Flutter-based budget planning app that helps track daily expenses, manage fixed costs, and achieve savings goals.
 

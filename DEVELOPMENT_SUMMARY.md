@@ -1,4 +1,4 @@
-# Smart Daily Budget - Development Summary
+# Money Controller - Development Summary
 
 ## ✅ Implementation Status
 

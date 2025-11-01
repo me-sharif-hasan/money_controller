@@ -2,7 +2,7 @@
 
 ## 📌 Project Overview
 
-**App Name:** Smart Daily Budget
+**App Name:** Money Controller
 **Framework:** Flutter (Dart)
 **Local Storage:** SharedPreferences (Android-optimized key–value storage)
 **Future Plan:** Firebase integration (Firestore-style structure retained in logic)

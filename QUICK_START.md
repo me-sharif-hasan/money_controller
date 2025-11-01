@@ -1,4 +1,4 @@
-# Quick Start Guide - Smart Daily Budget
+# Quick Start Guide - Money Controller
 
 ## 🎯 Getting the App Running
 

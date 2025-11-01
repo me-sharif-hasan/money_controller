@@ -1,8 +1,8 @@
-# 🎉 Smart Daily Budget - Project Complete!
+# 🎉 Money Controller - Project Complete!
 
 ## ✨ Project Overview
 
-**Smart Daily Budget** is a fully functional Flutter budget management application built following clean architecture principles and the specifications in `copilot_instructions.md`.
+**Money Controller** is a fully functional Flutter budget management application built following clean architecture principles and the specifications in `copilot_instructions.md`.
 
 ---
 
@@ -276,7 +276,7 @@ This project demonstrates:
 
 ## 🎉 Summary
 
-**Smart Daily Budget** is a fully functional, production-ready budget management application built with Flutter. All core features are implemented, tested, and ready for use. The codebase is clean, well-structured, and follows best practices.
+**Money Controller** is a fully functional, production-ready budget management application built with Flutter. All core features are implemented, tested, and ready for use. The codebase is clean, well-structured, and follows best practices.
 
 **Total Development**: Complete implementation following specifications  
 **Code Quality**: Professional-grade, maintainable code  

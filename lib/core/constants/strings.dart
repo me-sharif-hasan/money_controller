@@ -1,4 +1,4 @@
-const String appName = 'Smart Daily Budget';
+const String appName = 'Money Controller';
 const String home = 'Home';
 const String fixedCosts = 'Fixed Costs';
 const String vault = 'Vault';

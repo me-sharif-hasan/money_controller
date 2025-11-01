@@ -577,7 +577,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 ListTile(
                   leading: const Icon(Icons.description),
                   title: const Text('App Info'),
-                  subtitle: const Text('Smart Daily Budget - Manage your budget efficiently'),
+                  subtitle: const Text('Money Controller - Manage your budget efficiently'),
                 ),
               ],
             ),
