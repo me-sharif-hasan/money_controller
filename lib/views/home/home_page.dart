@@ -14,6 +14,7 @@ import '../fixed_cost/fixed_cost_page.dart';
 import '../vault/vault_page.dart';
 import '../settings/settings_page.dart';
 import '../expense_goal/expense_goal_page.dart';
+import '../reports/report_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -366,6 +367,17 @@ class _HomePageState extends State<HomePage> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => const ExpenseGoalPage()),
+                );
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.analytics),
+              title: const Text('Reports'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const ReportPage()),
                 );
               },
             ),
