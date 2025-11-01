@@ -21,6 +21,7 @@ class _SettingsPageState extends State<SettingsPage> {
   final _currencyController = TextEditingController();
   final GoogleDriveService _driveService = GoogleDriveService();
   bool _isLoading = false;
+  bool _isInitializing = true;
   Map<String, dynamic>? _backupInfo;
 
   @override
@@ -30,11 +31,12 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   Future<void> _initDriveService() async {
+    setState(() => _isInitializing = true);
     await _driveService.init();
     if (_driveService.isSignedIn) {
       await _loadBackupInfo();
     }
-    if (mounted) setState(() {});
+    if (mounted) setState(() => _isInitializing = false);
   }
 
   Future<void> _loadBackupInfo() async {
@@ -346,7 +348,14 @@ class _SettingsPageState extends State<SettingsPage> {
                         ),
                       ),
                       const Divider(height: 1),
-                      if (_driveService.isSignedIn) ...[
+                      if (_isInitializing) ...[
+                        const Padding(
+                          padding: EdgeInsets.all(32),
+                          child: Center(
+                            child: CircularProgressIndicator(),
+                          ),
+                        ),
+                      ] else if (_driveService.isSignedIn) ...[
                         ListTile(
                           leading: const CircleAvatar(
                             child: Icon(Icons.account_circle),
