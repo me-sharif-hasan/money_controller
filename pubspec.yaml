@@ -2,7 +2,7 @@ name: money_controller
 description: "A money controller app that tracks your remaining money to ensure fluent month goes on and establish a possibility of have some savings."
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 
-version: 1.0.0+1
+version: 1.0.1+2
 
 environment:
   sdk: ^3.9.2

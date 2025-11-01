@@ -10,6 +10,7 @@ import '../../providers/expense_goal_provider.dart';
 import '../../core/constants/colors.dart';
 import '../../core/constants/strings.dart';
 import '../../core/services/google_drive_service.dart';
+import '../../core/utils/error_handler.dart';
 import 'package:intl/intl.dart';
 
 class SettingsPage extends StatefulWidget {
@@ -99,108 +100,80 @@ class _SettingsPageState extends State<SettingsPage> {
       await _driveService.signIn();
       await _loadBackupInfo();
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Signed in as ${_driveService.currentUser?.email}')),
+        ErrorHandler.showSuccessSnackBar(
+          context,
+          'Signed in as ${_driveService.currentUser?.email}',
         );
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
       if (mounted) {
-        String errorMessage = 'Sign in failed: $e';
+        ErrorHandler.showErrorSnackBar(context, 'Sign In', e, stackTrace: stackTrace);
 
-        // Provide helpful error messages
-        if (e.toString().contains('People API') ||
-            e.toString().contains('people.googleapis.com')) {
-          errorMessage = 'People API not enabled!\n\n'
-              'For web sign-in, enable People API:\n'
-              '1. Visit: https://console.developers.google.com/apis/api/people.googleapis.com/overview?project=321117363173\n'
-              '2. Click "ENABLE"\n'
-              '3. Wait a few minutes\n'
-              '4. Try sign-in again\n\n'
-              'Android works, web needs this API.';
-        } else if (e.toString().contains('sign_in_failed') ||
+        // Show detailed help dialog only for specific configuration errors
+        if (e.toString().contains('sign_in_failed') ||
             e.toString().contains('SIGN_IN_FAILED')) {
-          errorMessage = 'Sign in failed!\n\n'
-              'Please configure OAuth client in Google Cloud Console.\n\n'
-              'Your SHA-1: BA:2C:2A:1A:C4:80:90:E4:4A:06:BB:5C:8E:CC:6D:22:EC:2D:B0:C7\n\n'
-              'See FIX_SIGN_IN_FAILED.md for detailed instructions.';
-        } else if (e.toString().contains('network_error')) {
-          errorMessage = 'Network error. Please check your internet connection.';
-        } else if (e.toString().contains('sign_in_canceled')) {
-          errorMessage = 'Sign in cancelled.';
+          _showSignInHelpDialog();
         }
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(errorMessage),
-            backgroundColor: dangerColor,
-            duration: const Duration(seconds: 6),
-            action: e.toString().contains('sign_in_failed')
-                ? SnackBarAction(
-                    label: 'Help',
-                    textColor: Colors.white,
-                    onPressed: () {
-                      showDialog(
-                        context: context,
-                        builder: (context) => AlertDialog(
-                          title: const Text('Sign-In Setup Required'),
-                          content: SingleChildScrollView(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const Text(
-                                  'OAuth client not configured. Follow these steps:\n',
-                                  style: TextStyle(fontWeight: FontWeight.bold),
-                                ),
-                                const Text('1. Open Google Cloud Console'),
-                                const Text('2. Select project: money-controller-c5eee'),
-                                const Text('3. Go to: APIs & Services → Credentials'),
-                                const Text('4. Create OAuth Client ID (Android)'),
-                                const Text('5. Package: com.iishanto.money_controller'),
-                                const SizedBox(height: 8),
-                                const Text('6. SHA-1 Certificate:'),
-                                Container(
-                                  padding: const EdgeInsets.all(8),
-                                  color: Colors.grey[200],
-                                  child: const SelectableText(
-                                    'BA:2C:2A:1A:C4:80:90:E4:4A:06:BB:5C:8E:CC:6D:22:EC:2D:B0:C7',
-                                    style: TextStyle(
-                                      fontFamily: 'monospace',
-                                      fontSize: 10,
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
-                                const Text('7. Download updated google-services.json'),
-                                const Text('8. Replace file in android/app/'),
-                                const SizedBox(height: 8),
-                                const Text(
-                                  'See FIX_SIGN_IN_FAILED.md for detailed guide.',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    color: primaryColor,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          actions: [
-                            TextButton(
-                              onPressed: () => Navigator.pop(context),
-                              child: const Text('OK'),
-                            ),
-                          ],
-                        ),
-                      );
-                    },
-                  )
-                : null,
-          ),
-        );
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
+  }
+
+  void _showSignInHelpDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Sign-In Setup Required'),
+        content: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'OAuth client not configured. Follow these steps:\n',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              const Text('1. Open Google Cloud Console'),
+              const Text('2. Select project: money-controller-c5eee'),
+              const Text('3. Go to: APIs & Services → Credentials'),
+              const Text('4. Create OAuth Client ID (Android)'),
+              const Text('5. Package: com.iishanto.money_controller'),
+              const SizedBox(height: 8),
+              const Text('6. SHA-1 Certificate:'),
+              Container(
+                padding: const EdgeInsets.all(8),
+                color: Colors.grey[200],
+                child: const SelectableText(
+                  'BA:2C:2A:1A:C4:80:90:E4:4A:06:BB:5C:8E:CC:6D:22:EC:2D:B0:C7',
+                  style: TextStyle(
+                    fontFamily: 'monospace',
+                    fontSize: 10,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+              const Text('7. Download updated google-services.json'),
+              const Text('8. Replace file in android/app/'),
+              const SizedBox(height: 8),
+              const Text(
+                'See FIX_SIGN_IN_FAILED.md for detailed guide.',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: primaryColor,
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _handleSignOut() async {
@@ -209,36 +182,11 @@ class _SettingsPageState extends State<SettingsPage> {
       await _driveService.signOut();
       setState(() => _backupInfo = null);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Signed out successfully')),
-        );
+        ErrorHandler.showSuccessSnackBar(context, 'Signed out successfully');
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Sign out failed: $e'), backgroundColor: dangerColor),
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
-    }
-  }
-
-  Future<void> _handleSwitchAccount() async {
-    setState(() => _isLoading = true);
-    try {
-      await _driveService.switchAccount();
-      await _loadBackupInfo();
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Switched to ${_driveService.currentUser?.email}')),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Switch account failed: $e'), backgroundColor: dangerColor),
-        );
+        ErrorHandler.showErrorSnackBar(context, 'Sign Out', e, stackTrace: stackTrace);
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -251,15 +199,11 @@ class _SettingsPageState extends State<SettingsPage> {
       final result = await _driveService.uploadBackup();
       await _loadBackupInfo();
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(result), backgroundColor: successColor),
-        );
+        ErrorHandler.showSuccessSnackBar(context, result);
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Upload failed: $e'), backgroundColor: dangerColor),
-        );
+        ErrorHandler.showErrorSnackBar(context, 'Upload Backup', e, stackTrace: stackTrace);
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -296,21 +240,17 @@ class _SettingsPageState extends State<SettingsPage> {
       // Reload all providers
       if (mounted) {
         var readCtx = context.read;
-        var scaffoldCtx = ScaffoldMessenger.of(context);
         await readCtx<BudgetProvider>().init();
         await readCtx<ExpenseProvider>().init();
         await readCtx<VaultProvider>().init();
         await readCtx<SettingProvider>().init();
         await readCtx<ExpenseGoalProvider>().init();
-        scaffoldCtx.showSnackBar(
-          SnackBar(content: Text(result), backgroundColor: successColor),
-        );
+
+        ErrorHandler.showSuccessSnackBar(context, result);
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Download failed: $e'), backgroundColor: dangerColor),
-        );
+        ErrorHandler.showErrorSnackBar(context, 'Download Backup', e, stackTrace: stackTrace);
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -365,36 +305,10 @@ class _SettingsPageState extends State<SettingsPage> {
                           ),
                           title: Text(signedInAs),
                           subtitle: Text(_driveService.currentUser?.email ?? ''),
-                          trailing: PopupMenuButton<String>(
-                            onSelected: (value) {
-                              if (value == 'signout') {
-                                _handleSignOut();
-                              } else if (value == 'switch') {
-                                _handleSwitchAccount();
-                              }
-                            },
-                            itemBuilder: (context) => [
-                              const PopupMenuItem(
-                                value: 'switch',
-                                child: Row(
-                                  children: [
-                                    Icon(Icons.swap_horiz),
-                                    SizedBox(width: 8),
-                                    Text(switchAccount),
-                                  ],
-                                ),
-                              ),
-                              const PopupMenuItem(
-                                value: 'signout',
-                                child: Row(
-                                  children: [
-                                    Icon(Icons.logout),
-                                    SizedBox(width: 8),
-                                    Text(signOut),
-                                  ],
-                                ),
-                              ),
-                            ],
+                          trailing: IconButton(
+                            icon: const Icon(Icons.logout),
+                            tooltip: signOut,
+                            onPressed: _handleSignOut,
                           ),
                         ),
                         const Divider(height: 1),

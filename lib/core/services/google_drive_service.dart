@@ -144,7 +144,8 @@ class GoogleDriveService {
       if (_currentUser != null) {
         log('GoogleSignIn: Restored current user ${_currentUser!.email}');
       } else {
-        throw Exception('User not signed in. Please sign in first.');
+        log('GoogleSignIn: User not signed in');
+        throw Exception('sign_in_required');
       }
     }
 
@@ -159,7 +160,8 @@ class GoogleDriveService {
         final account = await _googleSignIn.signInSilently(suppressErrors: true);
         if (account == null) {
           // Silent sign-in failed, user needs to sign in again
-          throw Exception('Session expired. Please sign in again.');
+          log('GoogleSignIn: Session expired');
+          throw Exception('session_expired');
         }
         _currentUser = account;
         log('GoogleSignIn: Token refreshed successfully');
@@ -170,7 +172,7 @@ class GoogleDriveService {
       log('GoogleSignIn: Authentication check failed - $e');
 
       // If it's a specific auth error, provide helpful message
-      if (e.toString().contains('Session expired')) {
+      if (e.toString().contains('session_expired') || e.toString().contains('Session expired')) {
         rethrow;
       }
 
@@ -179,7 +181,8 @@ class GoogleDriveService {
         _currentUser = _googleSignIn.currentUser;
         log('GoogleSignIn: Using current user as fallback');
       } else {
-        throw Exception('Authentication failed. Please sign in again.');
+        log('GoogleSignIn: Authentication failed');
+        throw Exception('authentication_failed');
       }
     }
   }
@@ -262,7 +265,8 @@ class GoogleDriveService {
       // Get authenticated client
       final authClient = await _googleSignIn.authenticatedClient();
       if (authClient == null) {
-        throw Exception('Failed to get authenticated client');
+        log('Upload error: Failed to get authenticated client');
+        throw Exception('authentication_failed');
       }
 
       final driveApi = ga.DriveApi(authClient);
@@ -299,7 +303,7 @@ class GoogleDriveService {
       }
     } catch (e) {
       log('Upload error: $e');
-      throw Exception('Failed to upload backup: $e');
+      rethrow;
     }
   }
 
@@ -332,7 +336,8 @@ class GoogleDriveService {
       // Get authenticated client
       final authClient = await _googleSignIn.authenticatedClient();
       if (authClient == null) {
-        throw Exception('Failed to get authenticated client');
+        log('Download error: Failed to get authenticated client');
+        throw Exception('authentication_failed');
       }
 
       final driveApi = ga.DriveApi(authClient);
@@ -341,7 +346,8 @@ class GoogleDriveService {
       final backupFile = await _findBackupFile(driveApi);
 
       if (backupFile == null) {
-        throw Exception('No backup found on Google Drive');
+        log('Download error: No backup found');
+        throw Exception('backup_not_found');
       }
 
       // Download the file
@@ -367,7 +373,7 @@ class GoogleDriveService {
       return 'Backup restored successfully\nBackup date: $backupDate';
     } catch (e) {
       log('Download error: $e');
-      throw Exception('Failed to download backup: $e');
+      rethrow;
     }
   }
 
@@ -410,7 +416,8 @@ class GoogleDriveService {
     try {
       final authClient = await _googleSignIn.authenticatedClient();
       if (authClient == null) {
-        throw Exception('Failed to get authenticated client');
+        log('Delete error: Failed to get authenticated client');
+        throw Exception('authentication_failed');
       }
 
       final driveApi = ga.DriveApi(authClient);
@@ -422,7 +429,7 @@ class GoogleDriveService {
       }
     } catch (e) {
       log('Delete error: $e');
-      throw Exception('Failed to delete backup: $e');
+      rethrow;
     }
   }
 }
