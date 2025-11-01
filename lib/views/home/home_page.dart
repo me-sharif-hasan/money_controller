@@ -9,12 +9,15 @@ import '../../widgets/app_button.dart';
 import '../../widgets/app_input_field.dart';
 import '../../core/constants/colors.dart';
 import '../../core/constants/strings.dart';
+import '../../core/constants/keys.dart';
+import '../../core/utils/prefs_helper.dart';
 import '../../models/expense_model.dart';
 import '../fixed_cost/fixed_cost_page.dart';
 import '../vault/vault_page.dart';
 import '../settings/settings_page.dart';
 import '../expense_goal/expense_goal_page.dart';
 import '../reports/report_page.dart';
+import '../../widgets/tutorial_overlay.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -29,6 +32,16 @@ class _HomePageState extends State<HomePage> {
   final _expenseDescriptionController = TextEditingController();
   String _selectedCategory = 'Food';
 
+  // Tutorial keys
+  final GlobalKey _totalMoneyKey = GlobalKey();
+  final GlobalKey _dailyAllowanceKey = GlobalKey();
+  final GlobalKey _remainingBalanceKey = GlobalKey();
+  final GlobalKey _addMoneyKey = GlobalKey();
+  final GlobalKey _addExpenseKey = GlobalKey();
+  final GlobalKey _drawerKey = GlobalKey();
+
+  bool _showTutorial = false;
+
   final List<String> _categories = [
     'Food',
     'Transport',
@@ -38,6 +51,40 @@ class _HomePageState extends State<HomePage> {
     'Health',
     'Other',
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    _checkFirstTimeUser();
+  }
+
+  Future<void> _checkFirstTimeUser() async {
+    final completed = await PrefsHelper.getBool(PREF_ONBOARDING_COMPLETED) ?? false;
+    if (!completed) {
+      // Delay to ensure widgets are built
+      Future.delayed(const Duration(milliseconds: 500), () {
+        if (mounted) {
+          setState(() {
+            _showTutorial = true;
+          });
+        }
+      });
+    }
+  }
+
+  Future<void> _completeTutorial() async {
+    await PrefsHelper.saveBool(PREF_ONBOARDING_COMPLETED, true);
+    setState(() {
+      _showTutorial = false;
+    });
+  }
+
+  Future<void> _skipTutorial() async {
+    await PrefsHelper.saveBool(PREF_ONBOARDING_COMPLETED, true);
+    setState(() {
+      _showTutorial = false;
+    });
+  }
 
   @override
   void dispose() {
@@ -295,11 +342,62 @@ class _HomePageState extends State<HomePage> {
       }
     });
 
+    return Stack(
+      children: [
+        _buildScaffold(budgetProvider, expenseProvider, settingProvider, expenseGoalProvider),
+        if (_showTutorial)
+          TutorialOverlay(
+            steps: [
+              TutorialStep(
+                title: 'Total Money',
+                description: 'This shows your total available money. Long press or tap the edit icon to update it.',
+                targetKey: _totalMoneyKey,
+              ),
+              TutorialStep(
+                title: 'Daily Allowance',
+                description: 'This is how much you can spend per day after accounting for fixed costs and savings goals.',
+                targetKey: _dailyAllowanceKey,
+              ),
+              TutorialStep(
+                title: 'Remaining Balance',
+                description: 'This shows how much money you have left for today after your expenses.',
+                targetKey: _remainingBalanceKey,
+              ),
+              TutorialStep(
+                title: 'Add Money',
+                description: 'Tap here to add money to your budget when you receive income.',
+                targetKey: _addMoneyKey,
+              ),
+              TutorialStep(
+                title: 'Add Expense',
+                description: 'Tap here to record your expenses. Track what you spend to stay within your daily allowance.',
+                targetKey: _addExpenseKey,
+              ),
+              TutorialStep(
+                title: 'Menu & Features',
+                description: 'Use the menu drawer to access Fixed Costs, Vault (savings), Expense Goals, Reports, and Settings. Explore all features to manage your finances better!',
+                targetKey: _drawerKey,
+              ),
+            ],
+            onComplete: _completeTutorial,
+            onSkip: _skipTutorial,
+          ),
+      ],
+    );
+  }
+
+  Widget _buildScaffold(
+    BudgetProvider budgetProvider,
+    ExpenseProvider expenseProvider,
+    SettingProvider settingProvider,
+    ExpenseGoalProvider expenseGoalProvider,
+  ) {
     return Scaffold(
       appBar: AppBar(
         title: const Text(APP_NAME),
         actions: [
           IconButton(
+            key: _drawerKey,
             icon: const Icon(Icons.settings),
             onPressed: () {
               Navigator.push(
@@ -403,6 +501,7 @@ class _HomePageState extends State<HomePage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   GestureDetector(
+                    key: _totalMoneyKey,
                     onLongPress: _showEditTotalMoneyDialog,
                     child: Stack(
                       children: [
@@ -430,22 +529,28 @@ class _HomePageState extends State<HomePage> {
                   Row(
                     children: [
                       Expanded(
-                        child: AmountCard(
-                          title: DAILY_ALLOWANCE,
-                          amount: budgetProvider.summary?.dailyAllowance ?? 0,
-                          currencySymbol: settingProvider.currencySymbol,
-                          color: successColor,
-                          icon: Icons.calendar_today,
+                        child: Container(
+                          key: _dailyAllowanceKey,
+                          child: AmountCard(
+                            title: DAILY_ALLOWANCE,
+                            amount: budgetProvider.summary?.dailyAllowance ?? 0,
+                            currencySymbol: settingProvider.currencySymbol,
+                            color: successColor,
+                            icon: Icons.calendar_today,
+                          ),
                         ),
                       ),
                       const SizedBox(width: 16),
                       Expanded(
-                        child: AmountCard(
-                          title: REMAINING_BALANCE,
-                          amount: budgetProvider.summary?.remainingBalance ?? 0,
-                          currencySymbol: settingProvider.currencySymbol,
-                          color: warningColor,
-                          icon: Icons.account_balance,
+                        child: Container(
+                          key: _remainingBalanceKey,
+                          child: AmountCard(
+                            title: REMAINING_BALANCE,
+                            amount: budgetProvider.summary?.remainingBalance ?? 0,
+                            currencySymbol: settingProvider.currencySymbol,
+                            color: warningColor,
+                            icon: Icons.account_balance,
+                          ),
                         ),
                       ),
                     ],
@@ -454,19 +559,25 @@ class _HomePageState extends State<HomePage> {
                   Row(
                     children: [
                       Expanded(
-                        child: AppButton(
-                          text: ADD_MONEY,
-                          onPressed: _showAddMoneyDialog,
-                          icon: Icons.add,
+                        child: Container(
+                          key: _addMoneyKey,
+                          child: AppButton(
+                            text: ADD_MONEY,
+                            onPressed: _showAddMoneyDialog,
+                            icon: Icons.add,
+                          ),
                         ),
                       ),
                       const SizedBox(width: 16),
                       Expanded(
-                        child: AppButton(
-                          text: ADD_EXPENSE,
-                          onPressed: _showAddExpenseDialog,
-                          backgroundColor: dangerColor,
-                          icon: Icons.remove,
+                        child: Container(
+                          key: _addExpenseKey,
+                          child: AppButton(
+                            text: ADD_EXPENSE,
+                            onPressed: _showAddExpenseDialog,
+                            backgroundColor: dangerColor,
+                            icon: Icons.remove,
+                          ),
                         ),
                       ),
                     ],
