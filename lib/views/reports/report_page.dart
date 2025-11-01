@@ -60,6 +60,7 @@ class _ReportPageState extends State<ReportPage> with SingleTickerProviderStateM
     Map<String, double> aggregatedData,
     String currencySymbol,
     List<ExpenseModel> expenses,
+    Map<String, List<ExpenseModel>> groupedExpenses,
   ) {
     final total = ReportUtils.calculateTotal(aggregatedData);
     final categoryBreakdown = ReportUtils.aggregateByCategory(expenses);
@@ -179,7 +180,7 @@ class _ReportPageState extends State<ReportPage> with SingleTickerProviderStateM
           const SizedBox(height: 16),
         ],
 
-        // Time Period Breakdown
+        // Time Period Breakdown with Detailed Expenses
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Row(
@@ -187,7 +188,7 @@ class _ReportPageState extends State<ReportPage> with SingleTickerProviderStateM
               const Icon(Icons.calendar_today, size: 20, color: primaryColor),
               const SizedBox(width: 8),
               const Text(
-                'Time Period Breakdown',
+                'Detailed Expenses by Period',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
@@ -198,7 +199,7 @@ class _ReportPageState extends State<ReportPage> with SingleTickerProviderStateM
         ),
         const SizedBox(height: 8),
 
-        // List of aggregated data
+        // List of aggregated data with expandable expense details
         Expanded(
           child: aggregatedData.isEmpty
               ? const Center(
@@ -221,14 +222,15 @@ class _ReportPageState extends State<ReportPage> with SingleTickerProviderStateM
                   itemBuilder: (context, index) {
                     final period = aggregatedData.keys.elementAt(index);
                     final amount = aggregatedData.values.elementAt(index);
+                    final periodExpenses = groupedExpenses[period] ?? [];
 
                     return Card(
                       elevation: 2,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: ListTile(
-                        contentPadding: const EdgeInsets.symmetric(
+                      child: ExpansionTile(
+                        tilePadding: const EdgeInsets.symmetric(
                           horizontal: 16,
                           vertical: 8,
                         ),
@@ -247,6 +249,13 @@ class _ReportPageState extends State<ReportPage> with SingleTickerProviderStateM
                           period,
                           style: const TextStyle(fontWeight: FontWeight.w600),
                         ),
+                        subtitle: Text(
+                          '${periodExpenses.length} expense${periodExpenses.length != 1 ? 's' : ''}',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey[600],
+                          ),
+                        ),
                         trailing: Text(
                           '$currencySymbol${amount.toStringAsFixed(2)}',
                           style: const TextStyle(
@@ -255,6 +264,76 @@ class _ReportPageState extends State<ReportPage> with SingleTickerProviderStateM
                             color: primaryColor,
                           ),
                         ),
+                        children: periodExpenses.map((expense) {
+                          return Container(
+                            decoration: BoxDecoration(
+                              border: Border(
+                                top: BorderSide(color: Colors.grey[200]!),
+                              ),
+                            ),
+                            child: ListTile(
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 24,
+                                vertical: 8,
+                              ),
+                              leading: CircleAvatar(
+                                radius: 20,
+                                backgroundColor: dangerColor.withAlpha((0.1*255).round()),
+                                child: const Icon(
+                                  Icons.shopping_bag,
+                                  color: dangerColor,
+                                  size: 20,
+                                ),
+                              ),
+                              title: Text(
+                                expense.description,
+                                style: const TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              subtitle: Row(
+                                children: [
+                                  Icon(
+                                    Icons.category,
+                                    size: 14,
+                                    color: Colors.grey[600],
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    expense.category,
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      color: Colors.grey[600],
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Icon(
+                                    Icons.access_time,
+                                    size: 14,
+                                    color: Colors.grey[600],
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    DateFormat('HH:mm').format(expense.date),
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      color: Colors.grey[600],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              trailing: Text(
+                                '$currencySymbol${expense.amount.toStringAsFixed(2)}',
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: dangerColor,
+                                ),
+                              ),
+                            ),
+                          );
+                        }).toList(),
                       ),
                     );
                   },
@@ -273,8 +352,9 @@ class _ReportPageState extends State<ReportPage> with SingleTickerProviderStateM
     final today = DateTime(now.year, now.month, now.day);
     final filtered = ReportUtils.filterByRange(allExpenses, today, today);
     final aggregated = ReportUtils.aggregateByDay(filtered);
+    final grouped = ReportUtils.groupByDay(filtered);
 
-    return _buildReportList(aggregated, currencySymbol, filtered);
+    return _buildReportList(aggregated, currencySymbol, filtered, grouped);
   }
 
   Widget _buildWeeklyReport(
@@ -288,8 +368,9 @@ class _ReportPageState extends State<ReportPage> with SingleTickerProviderStateM
     final end = DateTime(weekEnd.year, weekEnd.month, weekEnd.day);
     final filtered = ReportUtils.filterByRange(allExpenses, start, end);
     final aggregated = ReportUtils.aggregateByWeek(filtered);
+    final grouped = ReportUtils.groupByWeek(filtered);
 
-    return _buildReportList(aggregated, currencySymbol, filtered);
+    return _buildReportList(aggregated, currencySymbol, filtered, grouped);
   }
 
   Widget _buildMonthlyReport(
@@ -301,8 +382,9 @@ class _ReportPageState extends State<ReportPage> with SingleTickerProviderStateM
     final monthEnd = DateTime(now.year, now.month + 1, 0);
     final filtered = ReportUtils.filterByRange(allExpenses, monthStart, monthEnd);
     final aggregated = ReportUtils.aggregateByMonth(filtered);
+    final grouped = ReportUtils.groupByMonth(filtered);
 
-    return _buildReportList(aggregated, currencySymbol, filtered);
+    return _buildReportList(aggregated, currencySymbol, filtered, grouped);
   }
 
   Widget _buildCustomReport(
@@ -394,6 +476,7 @@ class _ReportPageState extends State<ReportPage> with SingleTickerProviderStateM
 
     final filtered = ReportUtils.filterByRange(allExpenses, _customStart!, _customEnd!);
     final aggregated = ReportUtils.aggregateByDay(filtered);
+    final grouped = ReportUtils.groupByDay(filtered);
 
     return Column(
       children: [
@@ -446,7 +529,7 @@ class _ReportPageState extends State<ReportPage> with SingleTickerProviderStateM
             ],
           ),
         ),
-        Expanded(child: _buildReportList(aggregated, currencySymbol, filtered)),
+        Expanded(child: _buildReportList(aggregated, currencySymbol, filtered, grouped)),
       ],
     );
   }

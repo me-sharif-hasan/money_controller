@@ -31,6 +31,25 @@ class ReportUtils {
     return _sortMapByKeyDescending(aggregated);
   }
 
+  /// Group expenses by day with detailed list
+  static Map<String, List<ExpenseModel>> groupByDay(List<ExpenseModel> expenses) {
+    final dateFormat = DateFormat('yyyy-MM-dd (EEE)');
+    final Map<String, List<ExpenseModel>> grouped = {};
+
+    for (var expense in expenses) {
+      final key = dateFormat.format(expense.date);
+      grouped.putIfAbsent(key, () => []);
+      grouped[key]!.add(expense);
+    }
+
+    // Sort expenses within each group by time (newest first)
+    for (var key in grouped.keys) {
+      grouped[key]!.sort((a, b) => b.date.compareTo(a.date));
+    }
+
+    return _sortMapWithListByKeyDescending(grouped);
+  }
+
   /// Aggregate expenses by week
   static Map<String, double> aggregateByWeek(List<ExpenseModel> expenses) {
     final dateFormat = DateFormat('yyyy-MM-dd');
@@ -47,6 +66,28 @@ class ReportUtils {
     return _sortMapByKeyDescending(aggregated);
   }
 
+  /// Group expenses by week with detailed list
+  static Map<String, List<ExpenseModel>> groupByWeek(List<ExpenseModel> expenses) {
+    final dateFormat = DateFormat('yyyy-MM-dd');
+    final Map<String, List<ExpenseModel>> grouped = {};
+
+    for (var expense in expenses) {
+      final date = expense.date;
+      final weekStart = date.subtract(Duration(days: date.weekday - 1));
+      final weekEnd = weekStart.add(const Duration(days: 6));
+      final key = 'Week: ${dateFormat.format(weekStart)} to ${dateFormat.format(weekEnd)}';
+      grouped.putIfAbsent(key, () => []);
+      grouped[key]!.add(expense);
+    }
+
+    // Sort expenses within each group by date (newest first)
+    for (var key in grouped.keys) {
+      grouped[key]!.sort((a, b) => b.date.compareTo(a.date));
+    }
+
+    return _sortMapWithListByKeyDescending(grouped);
+  }
+
   /// Aggregate expenses by month
   static Map<String, double> aggregateByMonth(List<ExpenseModel> expenses) {
     final dateFormat = DateFormat('yyyy-MM (MMMM yyyy)');
@@ -58,6 +99,25 @@ class ReportUtils {
     }
 
     return _sortMapByKeyDescending(aggregated);
+  }
+
+  /// Group expenses by month with detailed list
+  static Map<String, List<ExpenseModel>> groupByMonth(List<ExpenseModel> expenses) {
+    final dateFormat = DateFormat('yyyy-MM (MMMM yyyy)');
+    final Map<String, List<ExpenseModel>> grouped = {};
+
+    for (var expense in expenses) {
+      final key = dateFormat.format(expense.date);
+      grouped.putIfAbsent(key, () => []);
+      grouped[key]!.add(expense);
+    }
+
+    // Sort expenses within each group by date (newest first)
+    for (var key in grouped.keys) {
+      grouped[key]!.sort((a, b) => b.date.compareTo(a.date));
+    }
+
+    return _sortMapWithListByKeyDescending(grouped);
   }
 
   /// Aggregate expenses by category for a given list
@@ -82,6 +142,14 @@ class ReportUtils {
 
   /// Sort map by key in descending order (newest first)
   static Map<String, double> _sortMapByKeyDescending(Map<String, double> map) {
+    final sortedEntries = map.entries.toList()
+      ..sort((a, b) => b.key.compareTo(a.key));
+    return Map.fromEntries(sortedEntries);
+  }
+
+  /// Sort map with list values by key in descending order (newest first)
+  static Map<String, List<T>> _sortMapWithListByKeyDescending<T>(
+      Map<String, List<T>> map) {
     final sortedEntries = map.entries.toList()
       ..sort((a, b) => b.key.compareTo(a.key));
     return Map.fromEntries(sortedEntries);
